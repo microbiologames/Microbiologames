@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biofilm Simulator - Arcade Edition (V4.3)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+
+        body {
+            margin: 0; padding: 0;
+            background-color: #050b14; color: #ddd;
+            font-family: 'Courier Prime', 'Courier New', monospace;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
+            user-select: none;
+            cursor: none; /* Cache la souris pour l'arcade */
+        }
+
+        #arcade-container {
+            width: 100%; max-width: 800px;
+            display: flex; flex-direction: column;
+            border: 4px solid #333; box-shadow: 0 0 20px rgba(0,0,0,0.9);
+            background: #000;
+        }
+
+        /* --- HUD (En dehors du jeu) --- */
+        #top-hud {
+            display: flex; justify-content: space-between; align-items: stretch;
+            background: #0b111a; border-bottom: 3px solid #4CAF50;
+            padding: 8px 12px;
+        }
+
+        .hud-panel {
+            flex: 1;
+            padding: 5px;
+        }
+
+        .stat-box { font-size: 0.9em; line-height: 1.5; }
+        .stat-value { color: #4CAF50; font-weight: bold; }
+
+        #cip-warning {
+            color: #FF2222; font-weight: bold; font-size: 1.1em;
+            text-shadow: 1px 1px 0 #000; animation: blink 0.6s infinite;
+            display: none; margin-top: 5px;
+        }
+        #atp-bonus-alert {
+            color: #00ffff; font-weight: bold; font-size: 1em;
+            text-shadow: 1px 1px 0 #000; display: none; margin-top: 5px;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.1; } }
+
+        /* --- ZONE CANVAS --- */
+        #canvas-wrapper {
+            position: relative; width: 100%; height: 380px; /* Hauteur ajustée pour écran 7 pouces */
+            image-rendering: pixelated; overflow: hidden;
+        }
+        canvas { display: block; width: 100%; height: 100%; background-color: #050b14; }
+
+        /* --- CONTRÔLES (En dessous) --- */
+        #controls-panel {
+            background: #0b111a; border-top: 3px solid #4CAF50; padding: 12px;
+            display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+        }
+
+        .action-btn {
+            background-color: #1a1a24; color: #ccc;
+            border: 3px solid #555; padding: 6px 10px; font-size: 0.85em;
+            box-shadow: 2px 2px 0px #000; text-align: center;
+            opacity: 0.6; transition: all 0.1s;
+        }
+        .action-btn.selected {
+            border-color: #FFD700; background-color: #2a2a3a; color: #fff;
+            opacity: 1; transform: scale(1.05); box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        .action-btn.disabled { color: #444; border-color: #252525; background-color: #111; }
+        .action-btn.selected.disabled { border-color: #886600; box-shadow: none; opacity: 0.8; }
+        .btn-cost { display: block; font-size: 0.75em; color: #FFD700; margin-top: 2px; }
+        .action-btn.disabled .btn-cost { color: #555; }
+
+        /* --- OVERLAYS MODALES --- */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 20;
+        }
+        .overlay-box {
+            background: #0f141d; border: 4px solid #fff; padding: 20px; text-align: center;
+            box-shadow: 0 0 30px #000;
+        }
+        .overlay-box h2 { margin-top: 0; font-size: 1.5em; }
+        .overlay-box p { font-size: 1em; }
+        .blink-text { animation: blink 1s infinite; margin-top: 15px; color: #FFD700; }
+        
+        #win-box { border-color: #4CAF50; } #win-box h2 { color: #4CAF50; }
+        #lose-box { border-color: #FF3333; } #lose-box h2 { color: #FF3333; }
+    </style>
+</head>
+<body>
+
+    <div id="arcade-container">
+        <div id="top-hud">
+            <div class="hud-panel stat-box">
+                <div>Statut: <span id="ui-status" style="color:#ffaa00; font-weight:bold;">Cellule Libre</span></div>
+                <div>Végétatives: <span id="ui-cells" class="stat-value">1</span></div>
+                <div>Spores: <span id="ui-spores" style="color:#aa55ff; font-weight:bold;">0</span></div>
+                <div>Cellules Protégées: <span id="ui-matrix" class="stat-value">0%</span></div>
+            </div>
+            <div class="hud-panel stat-box" style="text-align: right;">
+                <div>Énergie (ATP): <span id="ui-atp" style="color:#FFD700; font-weight:bold; font-size:1.2em;">0</span></div>
+                <div>Colmatage: <span id="ui-clog" class="stat-value">0%</span></div>
+                <div>Prochain NEP: <span id="ui-nep-timer" style="color:#ffaa00;">180</span></div>
+                <div id="cip-warning">⚠️ NETTOYAGE EN COURS !</div>
+                <div id="atp-bonus-alert">BONUS ATP ACTIF ! (+200%)</div>
+            </div>
+        </div>
+
+        <div id="canvas-wrapper">
+            <canvas id="gameCanvas" width="800" height="380"></canvas>
+            
+            <div id="pause-overlay" class="overlay">
+                <div class="overlay-box" style="border-color:#00ffff;">
+                    <h2 style="color:#00ffff;">PAUSE</h2>
+                    <div class="blink-text">Appuyez sur PAUSE pour reprendre</div>
+                </div>
+            </div>
+            <div id="win-overlay" class="overlay">
+                <div class="overlay-box" id="win-box">
+                    <h2>COLMATAGE ATTEINT !</h2>
+                    <p>Le biofilm a totalement obstrué la canalisation.</p>
+                    <div class="blink-text">Appuyez sur ACTION pour recommencer</div>
+                </div>
+            </div>
+            <div id="lose-overlay" class="overlay">
+                <div class="overlay-box" id="lose-box">
+                    <h2>ÉRADICATION TOTALE !</h2>
+                    <p>Toutes les cellules ont été détruites par le NEP.</p>
+                    <div class="blink-text">Appuyez sur ACTION pour recommencer</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="controls-panel">
+            <div class="action-btn" id="btn-0">Croissance H <span class="btn-cost">-20 ATP</span></div>
+            <div class="action-btn" id="btn-1">Croissance V <span class="btn-cost">-30 ATP</span></div>
+            <div class="action-btn" id="btn-2">Sécréter Matrice <span class="btn-cost">-40 ATP</span></div>
+            <div class="action-btn" id="btn-3">Sporuler <span class="btn-cost">-60 ATP</span></div>
+            <div class="action-btn" id="btn-4">Germination <span class="btn-cost">-20 ATP</span></div>
+            <div class="action-btn" id="btn-5">Détachement <span class="btn-cost" style="color:#00ffff;">+ Bonus ATP</span></div>
+        </div>
+    </div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+ctx.imageSmoothingEnabled = false; 
+
+// Adapté pour la hauteur de 380px
+const PIPE_TOP = 40; const PIPE_BOTTOM = 340;
+const ADHESION_TIME_REQUIRED = 12; 
+const COSTS = [20, 30, 40, 60, 20, 0]; 
+
+let gameState = 'PHASE1'; 
+let previousState = 'PHASE1'; 
+let lastTime = 0; let timeTotal = 0;
+let atp = 0; 
+let cipActive = false; let cipTimer = 0; let cipEventTriggered = false;
+let adhesionProgress = 0; let atpBonusTimer = 0; let exposedSurface = 0;
+
+let nextCipIn = 180; 
+let firstNepPassed = false;
+let nextExoIn = 10; // Timer pour les bactéries exogènes
+
+let cells = []; let bubbles = [];
+let keys = { w:false, a:false, s:false, d:false, ArrowUp:false, ArrowLeft:false, ArrowDown:false, ArrowRight:false };
+
+let selectedActionIndex = 0;
+const TOTAL_ACTIONS = 6;
+let joystickCooldown = 0; 
+
+class Cell {
+    constructor(x, y, isAttached = false) {
+        this.x = x; this.y = y; this.w = 16; this.h = 8;
+        this.vx = 0; this.vy = 0;
+        this.isAttached = isAttached; 
+        this.isSpore = false; this.sporeHealth = 100;
+        this.isExo = false; // Bactérie exogène
+        this.matrixHealth = 0; // Matrice individuelle (0 = aucune protection)
+        this.color = '#3ef03e'; 
+    }
+    makeSpore() { this.isSpore = true; this.color = '#b05cff'; this.sporeHealth = 100; }
+    makeVegetative() { this.isSpore = false; this.color = '#3ef03e'; }
+}
+
+class Bubble {
+    constructor() { this.reset(true); }
+    reset(randomX = false) {
+        this.radius = Math.random() * 5 + 1.5;
+        this.x = randomX ? Math.random() * canvas.width : -15;
+        this.y = PIPE_TOP + Math.random() * (PIPE_BOTTOM - PIPE_TOP);
+        this.speed = (Math.random() * 300 + 250) / (this.radius * 0.4); 
+    }
+    update(dt, isCip) {
+        let currentSpeed = this.speed;
+        if (isCip) currentSpeed *= 1.8;
+        this.x += currentSpeed * dt;
+        if (this.x > canvas.width + 15) this.reset();
+    }
+    draw(ctx, isCip) {
+        ctx.fillStyle = isCip ? 'rgba(255, 60, 60, 0.6)' : 'rgba(100, 180, 255, 0.4)';
+        ctx.fillRect(Math.floor(this.x), Math.floor(this.y), Math.floor(this.radius * 1.5), Math.floor(this.radius * 0.8));
+    }
+}
+
+function spawnExogenousBacteria() {
+    let colors = ['#ff3366', '#33ccff', '#ffcc00', '#ff9933', '#ffffff'];
+    let yPos = PIPE_TOP + 15 + Math.random() * (PIPE_BOTTOM - PIPE_TOP - 30);
+    let exo = new Cell(-20, yPos, false);
+    exo.isExo = true;
+    exo.color = colors[Math.floor(Math.random() * colors.length)];
+    exo.vx = 180 + Math.random() * 100; // Arrive vite avec le flux
+    cells.push(exo);
+}
+
+function initGame() {
+    gameState = 'PHASE1'; atp = 10; cipActive = false; cipTimer = 0; 
+    nextCipIn = 180; firstNepPassed = false; nextExoIn = 10;
+    adhesionProgress = 0; atpBonusTimer = 0; timeTotal = 0; selectedActionIndex = 0; joystickCooldown = 0;
+    cells = [new Cell(80, 250, false)];
+    bubbles = []; for(let i=0; i<45; i++) bubbles.push(new Bubble());
+
+    document.querySelectorAll('.overlay').forEach(el => el.style.display = 'none');
+    document.getElementById('ui-status').innerText = 'Cellule Libre';
+    document.getElementById('ui-status').style.color = '#ffaa00';
+    updateMenuUI();
+    
+    lastTime = performance.now();
+    requestAnimationFrame(gameLoop);
+}
+
+window.addEventListener('keydown', (e) => {
+    if(keys.hasOwnProperty(e.key)) keys[e.key] = true;
+    if (e.key === 'p' || e.key === 'P') togglePause();
+    if (e.key === ' ' || e.key === 'Enter') {
+        if (gameState === 'WIN' || gameState === 'LOSE') initGame();
+        else if (gameState === 'PHASE2') executeSelectedAction();
+    }
+});
+window.addEventListener('keyup', (e) => { if(keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+
+function togglePause() {
+    if (gameState === 'WIN' || gameState === 'LOSE') return;
+    if (gameState === 'PAUSE') {
+        gameState = previousState;
+        document.getElementById('pause-overlay').style.display = 'none';
+        lastTime = performance.now(); 
+    } else {
+        previousState = gameState;
+        gameState = 'PAUSE';
+        document.getElementById('pause-overlay').style.display = 'flex';
+    }
+}
+
+function executeSelectedAction() {
+    let attached = cells.filter(c => c.isAttached);
+    if(attached.length === 0) return;
+
+    // Seules nos propres cellules peuvent se reproduire
+    let ownCells = attached.filter(c => !c.isExo);
+
+    switch(selectedActionIndex) {
+        case 0: // Croissance H
+            if (atp >= COSTS[0] && ownCells.length > 0) {
+                let shuffled = ownCells.sort(() => Math.random() - 0.5);
+                let placed = false;
+                
+                for (let parent of shuffled) {
+                    let candidates = [parent.x + 16, parent.x - 16];
+                    if (Math.random() > 0.5) candidates.reverse();
+                    
+                    for (let testX of candidates) {
+                        let free = true;
+                        for (let c of attached) {
+                            if (Math.abs(c.x - testX) < 12 && Math.abs(c.y - parent.y) < 6) {
+                                free = false; break;
+                            }
+                        }
+                        if (free && testX > 30 && testX < canvas.width - 40) {
+                            cells.push(new Cell(testX, parent.y, true));
+                            placed = true; break;
+                        }
+                    }
+                    if (placed) break;
+                }
+                if (!placed) {
+                    let p = ownCells[Math.floor(Math.random() * ownCells.length)];
+                    cells.push(new Cell(p.x + (Math.random() * 16 - 8), p.y + (Math.random() * 8 - 4), true));
+                }
+                atp -= COSTS[0];
+                checkStructuralIntegrity();
+            }
+            break;
+            
+        case 1: // Croissance V
+            if (atp >= COSTS[1] && ownCells.length > 0) {
+                let shuffled = ownCells.sort(() => Math.random() - 0.5);
+                let placed = false;
+                let middleY = (PIPE_TOP + PIPE_BOTTOM) / 2;
+                
+                for (let parent of shuffled) {
+                    let dir = parent.y < middleY ? 1 : -1;
+                    let testY = parent.y + dir * 8;
+                    
+                    let free = true;
+                    for (let c of attached) {
+                        if (Math.abs(c.x - parent.x) < 12 && Math.abs(c.y - testY) < 6) {
+                            free = false; break;
+                        }
+                    }
+                    if (free) {
+                        cells.push(new Cell(parent.x + (Math.random() * 8 - 4), testY, true));
+                        placed = true; break;
+                    }
+                }
+                if (!placed) {
+                    let p = ownCells[Math.floor(Math.random() * ownCells.length)];
+                    let dir = p.y < middleY ? 1 : -1;
+                    cells.push(new Cell(p.x + (Math.random() * 16 - 8), p.y + dir * 6, true));
+                }
+                atp -= COSTS[1];
+                checkStructuralIntegrity();
+            }
+            break;
+            
+        case 2: // Sécréter Matrice (Cible uniquement les cellules ACTUELLEMENT présentes)
+            if (atp >= COSTS[2]) { 
+                atp -= COSTS[2]; 
+                attached.forEach(c => c.matrixHealth = 100); // L'EPS englobe tout ce qui est là, même les exo
+            }
+            break;
+            
+        case 3: // Sporuler
+            if (atp >= COSTS[3]) {
+                let vegCells = ownCells.filter(c => !c.isSpore);
+                let numToTransform = Math.floor(vegCells.length * (0.30 + Math.random() * 0.10));
+                if (numToTransform > 0) {
+                    atp -= COSTS[3];
+                    vegCells.sort(() => Math.random() - 0.5);
+                    for (let i = 0; i < numToTransform; i++) vegCells[i].makeSpore();
+                }
+            }
+            break;
+            
+        case 4: // Germination
+            let spores = ownCells.filter(c => c.isSpore);
+            if (atp >= COSTS[4] && spores.length > 0) {
+                atp -= COSTS[4];
+                spores.forEach(s => s.makeVegetative());
+            }
+            break;
+            
+        case 5: // Détachement (Bonus)
+            let target = ownCells[Math.floor(Math.random() * ownCells.length)];
+            if(target) {
+                target.isAttached = false; target.vx = 250; 
+                atpBonusTimer = 5; nextCipIn *= 0.70; 
+                checkStructuralIntegrity();
+            }
+            break;
+    }
+}
+
+function updateMenuUI() {
+    let ownCells = cells.filter(c => c.isAttached && !c.isExo);
+    let canAfford = [
+        atp >= COSTS[0] && ownCells.length > 0,
+        atp >= COSTS[1] && ownCells.length > 0,
+        atp >= COSTS[2],
+        atp >= COSTS[3] && ownCells.filter(c=>!c.isSpore).length > 0,
+        atp >= COSTS[4] && ownCells.filter(c=>c.isSpore).length > 0,
+        ownCells.length > 0 
+    ];
+
+    for (let i = 0; i < TOTAL_ACTIONS; i++) {
+        let btn = document.getElementById('btn-' + i);
+        if (i === selectedActionIndex) btn.classList.add('selected');
+        else btn.classList.remove('selected');
+
+        if (!canAfford[i]) btn.classList.add('disabled');
+        else btn.classList.remove('disabled');
+    }
+}
+
+function checkStructuralIntegrity() {
+    let attachedCells = cells.filter(c => c.isAttached);
+    if (attachedCells.length === 0) return;
+    attachedCells.forEach(c => c.visited = false);
+    let queue = [];
+    for (let c of attachedCells) {
+        if (c.y <= PIPE_TOP + 12 || c.y >= PIPE_BOTTOM - 12) { c.visited = true; queue.push(c); }
+    }
+    while (queue.length > 0) {
+        let current = queue.shift();
+        for (let other of attachedCells) {
+            if (!other.visited && Math.abs(current.x - other.x) < 18 && Math.abs(current.y - other.y) < 12) {
+                other.visited = true; queue.push(other);
+            }
+        }
+    }
+    for (let c of attachedCells) {
+        if (!c.visited) { c.isAttached = false; c.vx = 150 + Math.random() * 100; }
+    }
+}
+
+function checkGameStateTransitions() {
+    let ownAttached = cells.filter(c => c.isAttached && !c.isExo);
+    if (ownAttached.length === 0 && gameState === 'PHASE2') {
+        gameState = 'LOSE'; document.getElementById('lose-overlay').style.display = 'flex';
+    }
+    let attached = cells.filter(c => c.isAttached);
+    if (attached.length === 0) return;
+    let minY = PIPE_BOTTOM; let maxY = PIPE_TOP;
+    for (let c of attached) { if (c.y < minY) minY = c.y; if (c.y > maxY) maxY = c.y; }
+    let clogPercent = ((maxY - minY) / (PIPE_BOTTOM - PIPE_TOP)) * 100;
+    let displayPercent = Math.min(100, Math.floor(clogPercent * 1.1));
+    document.getElementById('ui-clog').innerText = displayPercent + '%';
+
+    if (displayPercent >= 100 && gameState === 'PHASE2') {
+        gameState = 'WIN'; document.getElementById('win-overlay').style.display = 'flex';
+    }
+}
+
+function gameLoop(timestamp) {
+    let dt = (timestamp - lastTime) / 1000;
+    lastTime = timestamp; if (dt > 0.1) dt = 0.1; 
+    
+    if (gameState !== 'PAUSE') {
+        timeTotal += dt;
+        update(dt);
+    }
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+function update(dt) {
+    for (let b of bubbles) b.update(dt, cipActive);
+
+    // Gestions des cellules libres et Exogènes
+    for (let i = cells.length - 1; i >= 0; i--) {
+        let c = cells[i];
+        if (!c.isAttached) {
+            c.vx += 160 * dt; c.vx *= 0.95; c.vy *= 0.95;
+            c.x += c.vx * dt; c.y += c.vy * dt;
+            
+            // Les exogènes peuvent s'accrocher au biofilm si elles le percutent
+            if (c.isExo && gameState === 'PHASE2') {
+                for (let a of cells) {
+                    if (a.isAttached && a !== c) {
+                        if (Math.abs(c.x - a.x) < 18 && Math.abs(c.y - a.y) < 10) {
+                            c.isAttached = true; c.vx = 0; c.vy = 0;
+                            checkStructuralIntegrity(); 
+                            break;
+                        }
+                    }
+                }
+            }
+            if (cipActive || c.x > canvas.width + 50) cells.splice(i, 1);
+        }
+    }
+
+    // Apparition aléatoire des exogènes
+    if (gameState === 'PHASE2' || gameState === 'PHASE1') {
+        nextExoIn -= dt;
+        if (nextExoIn <= 0) {
+            spawnExogenousBacteria();
+            nextExoIn = 5 + Math.random() * 15;
+        }
+    }
+
+    if (gameState === 'PHASE1') {
+        if(cells.filter(c=>!c.isExo).length === 0) { checkGameStateTransitions(); return; }
+        let player = cells[0];
+        
+        let forceY = 0; let forceX = 0;
+        if (keys.ArrowUp || keys.w) forceY -= 220;
+        if (keys.ArrowDown || keys.s) forceY += 220;
+        if (keys.ArrowLeft || keys.a) forceX -= 220;
+        if (keys.ArrowRight || keys.d) forceX += 220;
+
+        player.vx += forceX * dt; player.vy += forceY * dt;
+        if (player.x < 10) { player.x = 10; player.vx = 0; }
+
+        let isTouchingWall = false;
+        if (player.y <= PIPE_TOP + 2) { player.y = PIPE_TOP + 2; isTouchingWall = true; } 
+        else if (player.y >= PIPE_BOTTOM - 10) { player.y = PIPE_BOTTOM - 10; isTouchingWall = true; }
+
+        if (isTouchingWall) {
+            adhesionProgress += dt;
+            if (adhesionProgress >= ADHESION_TIME_REQUIRED) {
+                player.isAttached = true; player.vx = 0; player.vy = 0;
+                gameState = 'PHASE2';
+                document.getElementById('ui-status').innerText = 'Biofilm Fixé';
+                document.getElementById('ui-status').style.color = '#4CAF50';
+            }
+        } else { adhesionProgress = Math.max(0, adhesionProgress - dt * 1.5); }
+    }
+
+    if (gameState === 'PHASE2') {
+        if (joystickCooldown > 0) joystickCooldown -= dt;
+        if (joystickCooldown <= 0) {
+            if (keys.ArrowRight || keys.d) {
+                selectedActionIndex = (selectedActionIndex + 1) % TOTAL_ACTIONS;
+                joystickCooldown = 0.2; 
+            } else if (keys.ArrowLeft || keys.a) {
+                selectedActionIndex = (selectedActionIndex + TOTAL_ACTIONS - 1) % TOTAL_ACTIONS;
+                joystickCooldown = 0.2;
+            }
+        }
+
+        // Anticollision douce
+        for (let i = 0; i < cells.length; i++) {
+            for (let j = i + 1; j < cells.length; j++) {
+                let c1 = cells[i]; let c2 = cells[j];
+                if (c1.isAttached && c2.isAttached) {
+                    let dx = c1.x - c2.x; let dy = c1.y - c2.y;
+                    if (Math.abs(dx) < 8 && Math.abs(dy) < 4) { 
+                        let pushX = dx === 0 ? (Math.random() > 0.5 ? 0.5 : -0.5) : dx * 0.1;
+                        let pushY = dy === 0 ? (Math.random() > 0.5 ? 0.5 : -0.5) : dy * 0.1;
+                        c1.x += pushX; c1.y += pushY;
+                        c2.x -= pushX; c2.y -= pushY;
+                    }
+                }
+            }
+        }
+        
+        for (let c of cells) {
+            if (c.isAttached) {
+                if (c.y < PIPE_TOP + 2) c.y = PIPE_TOP + 2;
+                if (c.y > PIPE_BOTTOM - 10) c.y = PIPE_BOTTOM - 10;
+            }
+        }
+
+        // Calcul de l'ATP Individuel (Les Exo occupent de l'espace mais ne donnent rien)
+        let attached = cells.filter(c => c.isAttached);
+        let atpGain = 0;
+        
+        for (let c of attached) {
+            if (c.isSpore || c.isExo) continue; 
+            
+            let exposed = 4;
+            for (let other of attached) {
+                if (c === other) continue;
+                let dx = Math.abs(c.x - other.x); let dy = Math.abs(c.y - other.y);
+                if (dx < 17 && dy < 5) exposed--; 
+                else if (dy < 9 && dx < 9) exposed--; 
+            }
+            let surfaceLibre = Math.max(0, exposed);
+            
+            // La matrice de cette cellule bloque 90% des nutriments pour ELLE-MÊME
+            let blockage = c.matrixHealth > 0 ? 0.90 : 0; 
+            atpGain += (surfaceLibre * 0.6 * (1 - blockage));
+        }
+
+        let bonusMult = (atpBonusTimer > 0) ? 3 : 1;
+        atp += atpGain * bonusMult * dt;
+        if (atpBonusTimer > 0) atpBonusTimer -= dt;
+
+        // Gestion du Nettoyage (NEP/CIP)
+        if (!cipActive) {
+            nextCipIn -= dt;
+            if (nextCipIn <= 0) {
+                cipActive = true; cipTimer = 7; cipEventTriggered = false;
+                firstNepPassed = true; // Cache le timer
+                document.getElementById('cip-warning').style.display = 'block';
+            }
+        } else {
+            cipTimer -= dt;
+            if (!cipEventTriggered) {
+                // Choc initial sur les cellules protégées
+                for (let c of cells) {
+                    if (c.matrixHealth > 0) c.matrixHealth = Math.max(0, c.matrixHealth - 30);
+                    if (c.isSpore) { c.sporeHealth -= 10; if(c.sporeHealth <= 0) c.isAttached = false; }
+                }
+                cipEventTriggered = true;
+            }
+            if (cipTimer <= 0) {
+                cipActive = false; 
+                nextCipIn = 40 + Math.random() * 80; // Reprogrammation aléatoire
+                document.getElementById('cip-warning').style.display = 'none';
+            } else {
+                for (let c of cells) {
+                    if (c.isAttached && !c.isSpore) {
+                        let deathChance = c.matrixHealth > 0 ? 0.05 : 0.80; 
+                        if (Math.random() < deathChance * dt) c.isAttached = false;
+                    }
+                }
+                checkStructuralIntegrity(); 
+            }
+        }
+
+        updateMenuUI();
+        checkGameStateTransitions();
+    }
+
+    // Mise à jour de l'interface texte
+    let ownCells = cells.filter(c=>!c.isSpore && c.isAttached && !c.isExo).length;
+    let ownSpores = cells.filter(c=>c.isSpore && c.isAttached && !c.isExo).length;
+    let totalAttached = cells.filter(c => c.isAttached);
+    let protectedCells = totalAttached.filter(c => c.matrixHealth > 0).length;
+    let matrixPercent = totalAttached.length > 0 ? Math.floor((protectedCells / totalAttached.length) * 100) : 0;
+
+    document.getElementById('ui-atp').innerText = Math.floor(atp);
+    document.getElementById('ui-cells').innerText = ownCells;
+    document.getElementById('ui-spores').innerText = ownSpores;
+    document.getElementById('ui-matrix').innerText = matrixPercent + '%';
+    
+    // Timer caché après la première NEP
+    let timerDisplay = firstNepPassed ? '?' : Math.max(0, Math.floor(nextCipIn)) + 's';
+    document.getElementById('ui-nep-timer').innerText = timerDisplay;
+    document.getElementById('atp-bonus-alert').style.display = atpBonusTimer > 0 ? 'block' : 'none';
+}
+
+function draw() {
+    ctx.fillStyle = cipActive ? '#500505' : '#031222';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#2b313b';
+    ctx.fillRect(0, 0, canvas.width, PIPE_TOP); ctx.fillRect(0, PIPE_BOTTOM, canvas.width, canvas.height - PIPE_BOTTOM);
+    
+    ctx.fillStyle = '#1b1f26';
+    ctx.fillRect(0, PIPE_TOP - 4, canvas.width, 4); ctx.fillRect(0, PIPE_BOTTOM, canvas.width, 4);
+
+    for(let i=0; i<canvas.width; i+=40) {
+        ctx.fillStyle = '#20252e';
+        ctx.fillRect(i, 0, 4, PIPE_TOP - 4); ctx.fillRect(i + 20, PIPE_BOTTOM + 4, 4, canvas.height - PIPE_BOTTOM);
+    }
+
+    for (let b of bubbles) b.draw(ctx, cipActive);
+
+    if (gameState === 'PHASE1' && cells.length > 0) {
+        let p = cells[0];
+        ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(p.x - 8, p.y - 14, 32, 5);
+        ctx.fillStyle = '#00ffcc'; ctx.fillRect(p.x - 8, p.y - 14, (adhesionProgress / ADHESION_TIME_REQUIRED) * 32, 5);
+    }
+
+    // Rendu individuel de la matrice
+    for (let c of cells) {
+        if (c.isAttached && c.matrixHealth > 0 && gameState !== 'PAUSE') {
+            let opac = Math.min(0.6, c.matrixHealth / 100);
+            ctx.fillStyle = `rgba(130, 185, 40, ${opac})`;
+            ctx.fillRect(Math.floor(c.x - 4), Math.floor(c.y - 4), c.w + 8, c.h + 8);
+        }
+    }
+
+    for (let c of cells) {
+        let sway = 0;
+        if (c.isAttached && gameState !== 'PAUSE') {
+            // Effet vent physique : Amplitude dépend de l'éloignement de la paroi
+            let distToWall = Math.min(Math.abs(c.y - PIPE_TOP), Math.abs(c.y - PIPE_BOTTOM));
+            let swayAmp = Math.max(0, (distToWall - 12) * 0.15); // Immobile près de la paroi (< 12px)
+            sway = Math.sin(timeTotal * 5 + c.y / 15 + c.x / 20) * swayAmp;
+        }
+        
+        ctx.fillStyle = '#000000'; ctx.fillRect(Math.floor(c.x + 1 + sway), Math.floor(c.y + 1), c.w, c.h);
+        ctx.fillStyle = c.color; ctx.fillRect(Math.floor(c.x + sway), Math.floor(c.y), c.w, c.h);
+        
+        // Détail interne
+        if (!c.isExo) {
+            ctx.fillStyle = c.isSpore ? '#ffffff' : '#147a14'; 
+            ctx.fillRect(Math.floor(c.x + 4 + sway), Math.floor(c.y + 2), c.w - 8, c.h - 4);
+        } else {
+            // Les exogènes ont un design interne un peu différent (lignes)
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(Math.floor(c.x + 6 + sway), Math.floor(c.y), 4, c.h);
+        }
+    }
+}
+
+initGame();
+</script>
+</body>
+</html>
