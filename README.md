@@ -1,8 +1,8 @@
 [README.md](https://github.com/user-attachments/files/30048130/README.md)
 # 🦠 Microbiologames
 
-Une petite collection de mini-jeux arcade sur le thème de la microbiologie,
-jouables directement dans le navigateur.
+Une petite collection de mini-jeux type arcade sur le thème de la microbiologie,
+jouables directement dans le navigateur. Utilisation bureau privilégiée mais certains jeux sont compatibles mobile. 
 
 **▶ Jouer en ligne : https://microbiologames.github.io/Microbiologames/**
 
@@ -19,30 +19,9 @@ tes cellules ne soient éradiquées.
 
 Jouable au clavier, directement dans le navigateur — aucune installation.
 
----
-
-## Sous le capot
-
-- 100 % **HTML / CSS / JavaScript**, sans dépendance ni serveur.
-- Rendu **pixel-art** sur `<canvas>`, esthétique borne d'arcade rétro.
-- Hébergé gratuitement via **GitHub Pages**.
-
-## Structure du dépôt
-
-```
-Microbiologames/
-├── index.html                       ← page d'accueil (arcade)
-└── gemini-code-1784117366682.html   ← Biofilm Simulator
-```
-
-Pour ajouter un jeu : déposer son fichier `.html`, puis copier un bloc
-« carte de jeu » dans `index.html` en adaptant le lien et le titre.
-
----
-
 ## Licence
 
-© 2026 Asssticot — **Tous droits réservés.**
+© 2026 Nicolas Nguyen Van Long — **Tous droits réservés.**
 
 Ces jeux sont proposés gratuitement, à des fins de divertissement personnel.
 La consultation du code source (inhérente à toute page web) est tolérée, mais
