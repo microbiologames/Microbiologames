@@ -3,7 +3,7 @@
 Une petite collection de mini-jeux et outils arcade sur le thème de la
 microbiologie, jouables directement dans le navigateur.
 
-**▶ Jouer en ligne : https://asssticot.github.io/Microbiologames/**
+**▶ Jouer en ligne : https://microbiologames.github.io/Microbiologames/**
 
 ---
 
@@ -59,11 +59,7 @@ comité de lecture**. Charte graphique ADRIA (glaz #00A9B2, jaune #FFDD00).
 
 ---
 
-## Sous le capot
 
-- 100 % **HTML / CSS / JavaScript**, sans dépendance ni serveur.
-- Rendu **pixel-art** sur `<canvas>`.
-- Hébergé gratuitement via **GitHub Pages**.
 
 ## Structure du dépôt
 
@@ -84,7 +80,7 @@ le titre, la version et la description.
 
 ## Licence
 
-© 2026 Asssticot — **Tous droits réservés.**
+© 2026 Nicolas Nguyen Van Long — **Tous droits réservés.**
 
 Ces jeux sont proposés gratuitement, à des fins de divertissement personnel.
 La consultation du code source (inhérente à toute page web) est tolérée, mais
