@@ -136,83 +136,89 @@
   ::-webkit-scrollbar-track{background:var(--noir);}
   ::-webkit-scrollbar-thumb{background:var(--ligne);}
   ::-webkit-scrollbar-thumb:hover{background:var(--glazD);}
+  .lang-sw{position:fixed; top:8px; right:10px; z-index:9999; display:flex;}
+  .lang-sw button{font-family:var(--mono); font-size:10px; font-weight:bold; cursor:pointer; letter-spacing:.1em;
+    color:var(--glazL); background:var(--nuit3); border:1px solid var(--ligne); padding:6px 9px;}
+  .lang-sw button:first-child{border-right:none;}
+  .lang-sw button.on{color:#04191c; background:var(--glaz); border-color:var(--glaz);}
 </style>
 </head>
 <body>
 <header>
   <a href="./index.html" style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--glazL);text-decoration:none;border:1px solid var(--ligne);background:var(--nuit3);padding:6px 9px;flex:0 0 auto;">← Index</a>
+  <div class="lang-sw" id="langSw"><button data-l="fr">FR</button><button data-l="en">EN</button></div>
   <div class="brand">
-    <div class="eyebrow">Microbiologie prévisionnelle · bac à sable</div>
+    <div class="eyebrow" data-i18n="pp_eyebrow">Microbiologie prévisionnelle · bac à sable</div>
     <h1>MICROBIO&nbsp;PAINT</h1>
   </div>
-  <div class="warn">⚠ SIMULATEUR PÉDAGOGIQUE SIMPLIFIÉ. Ne pas utiliser pour valider une <b>durée de vie</b>, un <b>procédé thermique</b>, des <b>limites HACCP</b> ni une conformité réglementaire. Valeurs indicatives et dépendantes de la matrice.</div>
+  <div class="warn" data-i18n-html="pp_warn"></div>
 </header>
 
 <div class="layout">
   <!-- ================= RAIL GAUCHE ================= -->
   <div class="rail left">
     <div class="block">
-      <div class="eyebrow">Outils</div>
+      <div class="eyebrow" data-i18n="pp_tools">Outils</div>
       <div class="tools">
-        <div class="tbtn on" data-tool="bacteria">BACTÉRIES</div>
-        <div class="tbtn" data-tool="temperature">TEMPÉRATURE</div>
+        <div class="tbtn on" data-tool="bacteria" data-i18n="pp_tool_bac">BACTÉRIES</div>
+        <div class="tbtn" data-tool="temperature" data-i18n="pp_tool_temp">TEMPÉRATURE</div>
         <div class="tbtn" data-tool="pH">pH</div>
         <div class="tbtn" data-tool="aw">aw</div>
-        <div class="tbtn" data-tool="heat" style="grid-column:1/3">TRAITEMENT THERMIQUE</div>
+        <div class="tbtn" data-tool="heat" style="grid-column:1/3" data-i18n="pp_tool_heat">TRAITEMENT THERMIQUE</div>
       </div>
     </div>
 
     <div class="block">
-      <div class="eyebrow">Pinceau</div>
-      <div class="row"><label>Taille</label><span class="val" id="v-brush">3</span></div>
+      <div class="eyebrow" data-i18n="pp_brush">Pinceau</div>
+      <div class="row"><label data-i18n="pp_size">Taille</label><span class="val" id="v-brush">3</span></div>
       <input type="range" id="brush" min="1" max="8" step="1" value="3">
-      <div class="row"><label>Intensité</label><span class="val" id="v-inten">0.80</span></div>
+      <div class="row"><label data-i18n="pp_intensity">Intensité</label><span class="val" id="v-inten">0.80</span></div>
       <input type="range" id="inten" min="0.05" max="1" step="0.05" value="0.8">
     </div>
 
     <div class="block">
-      <div class="eyebrow">Outil actif</div>
+      <div class="eyebrow" data-i18n="pp_activetool">Outil actif</div>
       <div class="tparams" data-for="bacteria">
-        <div class="row"><label>Espèce</label></div>
+        <div class="row"><label data-i18n="pp_species_lbl">Espèce</label></div>
         <select id="species">
           <option value="listeria_monocytogenes">Listeria monocytogenes</option>
           <option value="salmonella_enterica">Salmonella enterica</option>
         </select>
-        <div class="row" style="margin-top:8px"><label>Inoculation</label><span class="val" id="v-inoc">3.0 log</span></div>
+        <div class="row" style="margin-top:8px"><label data-i18n="pp_inoc">Inoculation</label><span class="val" id="v-inoc">3.0 log</span></div>
         <input type="range" id="inoc" min="0" max="9" step="0.5" value="3">
       </div>
       <div class="tparams" data-for="temperature" style="display:none">
-        <div class="row"><label>Temp. cible</label><span class="val" id="v-ttar">8 °C</span></div>
+        <div class="row"><label data-i18n="pp_ttar">Temp. cible</label><span class="val" id="v-ttar">8 °C</span></div>
         <input type="range" id="ttar" min="0" max="60" step="1" value="8">
       </div>
       <div class="tparams" data-for="pH" style="display:none">
-        <div class="row"><label>pH cible</label><span class="val" id="v-phtar">6.8</span></div>
+        <div class="row"><label data-i18n="pp_phtar">pH cible</label><span class="val" id="v-phtar">6.8</span></div>
         <input type="range" id="phtar" min="3" max="9" step="0.1" value="6.8">
       </div>
       <div class="tparams" data-for="aw" style="display:none">
-        <div class="row"><label>aw cible</label><span class="val" id="v-awtar">0.985</span></div>
+        <div class="row"><label data-i18n="pp_awtar">aw cible</label><span class="val" id="v-awtar">0.985</span></div>
         <input type="range" id="awtar" min="0.85" max="1.00" step="0.005" value="0.985">
       </div>
       <div class="tparams" data-for="heat" style="display:none">
-        <div class="row"><label>Temp. trait.</label><span class="val" id="v-htemp">65 °C</span></div>
+        <div class="row"><label data-i18n="pp_htemp">Temp. trait.</label><span class="val" id="v-htemp">65 °C</span></div>
         <input type="range" id="htemp" min="55" max="100" step="1" value="65">
-        <div class="row" style="margin-top:8px"><label>Durée</label><span class="val" id="v-hdur">3.0 min</span></div>
+        <div class="row" style="margin-top:8px"><label data-i18n="pp_dur">Durée</label><span class="val" id="v-hdur">3.0 min</span></div>
         <input type="range" id="hdur" min="0.1" max="10" step="0.1" value="3">
-        <p class="hint">Peindre = appliquer une inactivation D/z locale.</p>
+        <p class="hint" data-i18n="pp_heathint">Peindre = appliquer une inactivation D/z locale.</p>
       </div>
     </div>
 
     <div class="block">
-      <div class="eyebrow">Simulation</div>
+      <div class="eyebrow" data-i18n="pp_sim">Simulation</div>
       <div class="grid2">
         <button class="btn play" id="play">▶ LECTURE</button>
-        <button class="btn" id="step">⏭ PAS</button>
-        <button class="btn danger" id="reset">↺ RESET</button>
-        <button class="btn danger" id="clear">✕ BACTÉRIES</button>
+        <button class="btn" id="step" data-i18n="pp_step">⏭ PAS</button>
+        <button class="btn danger" id="reset" data-i18n="pp_reset">↺ RESET</button>
+        <button class="btn danger" id="clear" data-i18n="pp_clear">✕ BACTÉRIES</button>
       </div>
-      <div class="row" style="margin-top:10px"><label>Pas dt</label><span class="val" id="v-dt">0.25 h</span></div>
+      <div class="row" style="margin-top:10px"><label data-i18n="pp_dt">Pas dt</label><span class="val" id="v-dt">0.25 h</span></div>
       <input type="range" id="dt" min="0.1" max="1" step="0.05" value="0.25">
-      <div class="row" style="margin-top:6px"><label>Vitesse</label></div>
+      <div class="row" style="margin-top:6px"><label data-i18n="pp_speed">Vitesse</label></div>
       <div class="speeds" id="speeds">
         <div class="spbtn" data-speed="0.25">0.25×</div>
         <div class="spbtn" data-speed="0.5">0.5×</div>
@@ -224,7 +230,7 @@
     </div>
 
     <div class="block">
-      <div class="eyebrow">Overlay du milieu</div>
+      <div class="eyebrow" data-i18n="pp_overlay">Overlay du milieu</div>
       <div class="ovs" id="overlays">
         <div class="ovbtn on" data-ov="none">OFF</div>
         <div class="ovbtn" data-ov="temperature">T°</div>
@@ -247,48 +253,118 @@
   <!-- ================= RAIL DROIT ================= -->
   <div class="rail right">
     <div class="block">
-      <div class="eyebrow">Espèces</div>
+      <div class="eyebrow" data-i18n="pp_species">Espèces</div>
       <div class="legend"><canvas class="sw" id="sw-l" width="14" height="14"></canvas>Listeria monocytogenes <i>Gram +</i></div>
       <div class="legend"><canvas class="sw" id="sw-s" width="14" height="14"></canvas>Salmonella enterica <i>Gram −</i></div>
     </div>
 
     <div class="block">
-      <div class="eyebrow">Milieu (moyennes)</div>
-      <div class="stat"><span>Température</span><b id="avg-t">8.0 °C</b></div>
+      <div class="eyebrow" data-i18n="pp_medium">Milieu (moyennes)</div>
+      <div class="stat"><span data-i18n="pp_temp">Température</span><b id="avg-t">8.0 °C</b></div>
       <div class="stat"><span>pH</span><b id="avg-ph">6.80</b></div>
       <div class="stat"><span>aw</span><b id="avg-aw">0.985</b></div>
-      <div class="stat"><span>Temps simulé</span><b id="sim-time">0.0 h</b></div>
+      <div class="stat"><span data-i18n="pp_simtime">Temps simulé</span><b id="sim-time">0.0 h</b></div>
     </div>
 
     <div class="block">
-      <div class="eyebrow">Populations</div>
-      <div class="stat"><span>Listeria — cellules</span><b class="l" id="pop-l-cells">0</b></div>
-      <div class="stat"><span>Listeria — moy.</span><b class="l" id="pop-l-mean">0.0 log</b></div>
-      <div class="stat"><span>Salmonella — cellules</span><b class="s" id="pop-s-cells">0</b></div>
-      <div class="stat"><span>Salmonella — moy.</span><b class="s" id="pop-s-mean">0.0 log</b></div>
+      <div class="eyebrow" data-i18n="pp_pops">Populations</div>
+      <div class="stat"><span data-i18n="pp_l_cells">Listeria — cellules</span><b class="l" id="pop-l-cells">0</b></div>
+      <div class="stat"><span data-i18n="pp_l_mean">Listeria — moy.</span><b class="l" id="pop-l-mean">0.0 log</b></div>
+      <div class="stat"><span data-i18n="pp_s_cells">Salmonella — cellules</span><b class="s" id="pop-s-cells">0</b></div>
+      <div class="stat"><span data-i18n="pp_s_mean">Salmonella — moy.</span><b class="s" id="pop-s-mean">0.0 log</b></div>
       <div style="height:8px"></div>
       <canvas id="chart" width="304" height="120"></canvas>
-      <p class="foot">Courbe : population moyenne log10 sur cellules colonisées.</p>
+      <p class="foot" data-i18n="pp_chartfoot">Courbe : population moyenne log10 sur cellules colonisées.</p>
     </div>
 
     <div class="block diag">
-      <div class="eyebrow">Diagnostic local</div>
-      <div id="diag-body"><p class="hint">Survolez la matrice pour analyser une cellule (espèce sélectionnée dans l'outil Bactéries).</p></div>
+      <div class="eyebrow" data-i18n="pp_diag">Diagnostic local</div>
+      <div id="diag-body"><p class="hint" data-i18n="pp_diaghint">Survolez la matrice pour analyser une cellule (espèce sélectionnée dans l'outil Bactéries).</p></div>
     </div>
 
     <div class="block">
-      <div class="eyebrow">Messages pédagogiques</div>
-      <div class="msg">Croissance locale = muOpt × gammaT × gammaPH × gammaAW.</div>
-      <div class="msg">Une zone froide peut permettre la croissance lente de Listeria, mais rarement celle de Salmonella.</div>
-      <div class="msg">Une faible aw bloque la croissance sans destruction instantanée.</div>
-      <div class="msg">Le traitement thermique réduit la population selon un modèle D/z simplifié.</div>
-      <div class="msg">Outil pédagogique — ne valide ni durée de vie ni procédé.</div>
-      <p class="foot">Charte graphique ADRIA — glaz #00A9B2, jaune #FFDD00. Rendu pixel-art schématique.</p>
+      <div class="eyebrow" data-i18n="pp_msgs">Messages pédagogiques</div>
+      <div class="msg" data-i18n="pp_msg1">Croissance locale = muOpt × gammaT × gammaPH × gammaAW.</div>
+      <div class="msg" data-i18n="pp_msg2">Une zone froide peut permettre la croissance lente de Listeria, mais rarement celle de Salmonella.</div>
+      <div class="msg" data-i18n="pp_msg3">Une faible aw bloque la croissance sans destruction instantanée.</div>
+      <div class="msg" data-i18n="pp_msg4">Le traitement thermique réduit la population selon un modèle D/z simplifié.</div>
+      <div class="msg" data-i18n="pp_msg5">Outil pédagogique — ne valide ni durée de vie ni procédé.</div>
+      <p class="foot" data-i18n="pp_credit">Charte graphique ADRIA — glaz #00A9B2, jaune #FFDD00. Rendu pixel-art schématique.</p>
     </div>
   </div>
 </div>
 
 <script>
+
+/* ===================== INTERNATIONALISATION (FR / EN) ===================== */
+const I18N = {
+ fr: {
+  pp_eyebrow:"Microbiologie prévisionnelle · bac à sable", pp_tools:"Outils", pp_brush:"Pinceau",
+  pp_activetool:"Outil actif", pp_sim:"Simulation", pp_overlay:"Overlay du milieu", pp_species:"Espèces",
+  pp_medium:"Milieu (moyennes)", pp_pops:"Populations", pp_diag:"Diagnostic local", pp_msgs:"Messages pédagogiques",
+  pp_tool_bac:"BACTÉRIES", pp_tool_temp:"TEMPÉRATURE", pp_tool_heat:"TRAITEMENT THERMIQUE",
+  pp_size:"Taille", pp_intensity:"Intensité", pp_species_lbl:"Espèce", pp_inoc:"Inoculation",
+  pp_ttar:"Temp. cible", pp_phtar:"pH cible", pp_awtar:"aw cible", pp_htemp:"Temp. trait.",
+  pp_dur:"Durée", pp_dt:"Pas dt", pp_speed:"Vitesse",
+  pp_heathint:"Peindre = appliquer une inactivation D/z locale.",
+  pp_step:"⏭ PAS", pp_reset:"↺ RESET", pp_clear:"✕ BACTÉRIES",
+  pp_temp:"Température", pp_simtime:"Temps simulé",
+  pp_l_cells:"Listeria — cellules", pp_l_mean:"Listeria — moy.", pp_s_cells:"Salmonella — cellules", pp_s_mean:"Salmonella — moy.",
+  pp_chartfoot:"Courbe : population moyenne log10 sur cellules colonisées.",
+  pp_credit:"Charte graphique ADRIA — glaz #00A9B2, jaune #FFDD00. Rendu pixel-art schématique.",
+  pp_msg1:"Croissance locale = muOpt × gammaT × gammaPH × gammaAW.",
+  pp_msg2:"Une zone froide peut permettre la croissance lente de Listeria, mais rarement celle de Salmonella.",
+  pp_msg3:"Une faible aw bloque la croissance sans destruction instantanée.",
+  pp_msg4:"Le traitement thermique réduit la population selon un modèle D/z simplifié.",
+  pp_msg5:"Outil pédagogique — ne valide ni durée de vie ni procédé.",
+  pp_warn:"⚠ SIMULATEUR PÉDAGOGIQUE SIMPLIFIÉ. Ne pas utiliser pour valider une <b>durée de vie</b>, un <b>procédé thermique</b>, des <b>limites HACCP</b> ni une conformité réglementaire. Valeurs indicatives et dépendantes de la matrice.",
+  pp_diaghint:"Survolez la matrice pour analyser une cellule (espèce sélectionnée dans l'outil Bactéries).",
+  pp_play:"▶ LECTURE", pp_pause:"⏸ PAUSE",
+  int_heat:"🔥 TRAITEMENT THERMIQUE", int_none:"AUCUNE POPULATION", int_death:"↓ DÉCROISSANCE (défavorable)",
+  int_sat:"■ SATURATION (Nmax)", int_grow:"↑ CROISSANCE POSSIBLE", int_slow:"↑ CROISSANCE LIMITÉE (lente)",
+  dg_species:"espèce", dg_tloc:"T locale", dg_phloc:"pH local", dg_awloc:"aw locale", dg_mu:"µ effectif", dg_pop:"population",
+ },
+ en: {
+  pp_eyebrow:"Predictive microbiology · sandbox", pp_tools:"Tools", pp_brush:"Brush",
+  pp_activetool:"Active tool", pp_sim:"Simulation", pp_overlay:"Medium overlay", pp_species:"Species",
+  pp_medium:"Medium (averages)", pp_pops:"Populations", pp_diag:"Local diagnostic", pp_msgs:"Teaching notes",
+  pp_tool_bac:"BACTERIA", pp_tool_temp:"TEMPERATURE", pp_tool_heat:"HEAT TREATMENT",
+  pp_size:"Size", pp_intensity:"Intensity", pp_species_lbl:"Species", pp_inoc:"Inoculation",
+  pp_ttar:"Target temp.", pp_phtar:"Target pH", pp_awtar:"Target aw", pp_htemp:"Treat. temp.",
+  pp_dur:"Duration", pp_dt:"Step dt", pp_speed:"Speed",
+  pp_heathint:"Paint = apply a local D/z inactivation.",
+  pp_step:"⏭ STEP", pp_reset:"↺ RESET", pp_clear:"✕ BACTERIA",
+  pp_temp:"Temperature", pp_simtime:"Simulated time",
+  pp_l_cells:"Listeria — cells", pp_l_mean:"Listeria — mean", pp_s_cells:"Salmonella — cells", pp_s_mean:"Salmonella — mean",
+  pp_chartfoot:"Curve: mean log10 population over colonised cells.",
+  pp_credit:"ADRIA visual identity — glaz #00A9B2, yellow #FFDD00. Schematic pixel-art rendering.",
+  pp_msg1:"Local growth = muOpt × gammaT × gammaPH × gammaAW.",
+  pp_msg2:"A cold zone can allow slow Listeria growth, but rarely Salmonella growth.",
+  pp_msg3:"Low aw blocks growth without instant destruction.",
+  pp_msg4:"Heat treatment reduces the population using a simplified D/z model.",
+  pp_msg5:"Educational tool — validates neither shelf life nor process.",
+  pp_warn:"⚠ SIMPLIFIED EDUCATIONAL SIMULATOR. Do not use to validate a <b>shelf life</b>, a <b>thermal process</b>, <b>HACCP limits</b> or regulatory compliance. Indicative, matrix-dependent values.",
+  pp_diaghint:"Hover the matrix to analyse a cell (species selected in the Bacteria tool).",
+  pp_play:"▶ PLAY", pp_pause:"⏸ PAUSE",
+  int_heat:"🔥 HEAT TREATMENT", int_none:"NO POPULATION", int_death:"↓ DECLINE (unfavourable)",
+  int_sat:"■ SATURATION (Nmax)", int_grow:"↑ GROWTH POSSIBLE", int_slow:"↑ LIMITED GROWTH (slow)",
+  dg_species:"species", dg_tloc:"local T", dg_phloc:"local pH", dg_awloc:"local aw", dg_mu:"effective µ", dg_pop:"population",
+ },
+};
+let lang = "fr";
+try { lang = localStorage.getItem('mbg_lang') || (navigator.language || 'fr').slice(0,2); } catch(e) {}
+if (!I18N[lang]) lang = "fr";
+const t = (key) => (I18N[lang] && I18N[lang][key]) ?? I18N.fr[key] ?? key;
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(n => { n.textContent = t(n.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-html]').forEach(n => { n.innerHTML = t(n.getAttribute('data-i18n-html')); });
+  document.documentElement.lang = lang;
+  document.querySelectorAll('#langSw button').forEach(b => b.classList.toggle('on', b.dataset.l === lang));
+  try { var pb = document.getElementById('play'); if (pb) pb.textContent = (typeof SIM !== 'undefined' && SIM.playing) ? t('pp_pause') : t('pp_play'); } catch(e){}
+  try { if (typeof updateDiagnostic === 'function') updateDiagnostic(); } catch(e){}
+}
+function setLang(l){ if(!I18N[l]) return; lang=l; try{ localStorage.setItem('mbg_lang',l); }catch(e){} applyLang(); }
+
 "use strict";
 /* =====================================================================
    MICROBIO PAINT — version pixel-art (charte ADRIA)
@@ -785,12 +861,12 @@ document.getElementById('species').addEventListener('change', e => tool.bacteria
 const playBtn = document.getElementById('play');
 playBtn.addEventListener('click', () => {
   SIM.playing = !SIM.playing;
-  playBtn.textContent = SIM.playing ? '⏸ PAUSE' : '▶ LECTURE';
+  playBtn.textContent = SIM.playing ? t('pp_pause') : t('pp_play');
   playBtn.classList.toggle('active', SIM.playing);
 });
 document.getElementById('step').addEventListener('click', () => { if (!SIM.playing) stepModel(); });
 document.getElementById('reset').addEventListener('click', () => {
-  resetAll(); SIM.playing = false; playBtn.textContent = '▶ LECTURE'; playBtn.classList.remove('active');
+  resetAll(); SIM.playing = false; playBtn.textContent = t('pp_play'); playBtn.classList.remove('active');
 });
 document.getElementById('clear').addEventListener('click', clearBacteria);
 
@@ -816,17 +892,17 @@ function fmt(x, d){ return Number(x).toFixed(d); }
 
 function interpret(key, idx, g, mu, logN) {
   const Nmax = DB.species[key].growth.Nmax.value;
-  if (environment.heatTrace[idx] > 0.05) return { cls: 'i-heat',  txt: '🔥 TRAITEMENT THERMIQUE' };
-  if (logN < 0.05)                        return { cls: 'i-none',  txt: 'AUCUNE POPULATION' };
-  if (g.gTotal < 0.005)                   return { cls: 'i-death', txt: '↓ DÉCROISSANCE (défavorable)' };
-  if (logN >= Nmax * 0.98)                return { cls: 'i-sat',   txt: '■ SATURATION (Nmax)' };
-  if (mu >= 0.1)                          return { cls: 'i-grow',  txt: '↑ CROISSANCE POSSIBLE' };
-  return { cls: 'i-slow', txt: '↑ CROISSANCE LIMITÉE (lente)' };
+  if (environment.heatTrace[idx] > 0.05) return { cls: 'i-heat',  txt: t('int_heat') };
+  if (logN < 0.05)                        return { cls: 'i-none',  txt: t('int_none') };
+  if (g.gTotal < 0.005)                   return { cls: 'i-death', txt: t('int_death') };
+  if (logN >= Nmax * 0.98)                return { cls: 'i-sat',   txt: t('int_sat') };
+  if (mu >= 0.1)                          return { cls: 'i-grow',  txt: t('int_grow') };
+  return { cls: 'i-slow', txt: t('int_slow') };
 }
 function updateDiagnostic() {
   const body = document.getElementById('diag-body');
   if (hoverIdx < 0) {
-    body.innerHTML = '<p class="hint">Survolez la matrice pour analyser une cellule (espèce sélectionnée dans l\'outil Bactéries).</p>';
+    body.innerHTML = '<p class="hint">'+t('pp_diaghint')+'</p>';
     return;
   }
   const key = tool.bacteria.species, sp = DB.species[key], idx = hoverIdx;
@@ -834,17 +910,17 @@ function updateDiagnostic() {
   const it = interpret(key, idx, g, mu, logN);
   const dr = (a, b, hi) => `<div class="drow${hi?' hi':''}"><span>${a}</span><span>${b}</span></div>`;
   body.innerHTML =
-    dr('espèce', sp.displayName) +
-    dr('T locale', fmt(environment.temperature[idx],1)+' °C') +
-    dr('pH local', fmt(environment.pH[idx],2)) +
-    dr('aw locale', fmt(environment.aw[idx],3)) +
+    dr(t('dg_species'), sp.displayName) +
+    dr(t('dg_tloc'), fmt(environment.temperature[idx],1)+' °C') +
+    dr(t('dg_phloc'), fmt(environment.pH[idx],2)) +
+    dr(t('dg_awloc'), fmt(environment.aw[idx],3)) +
     '<div class="sep"></div>' +
     dr('gammaT', fmt(g.gT,3)) +
     dr('gammaPH', fmt(g.gPH,3)) +
     dr('gammaAW', fmt(g.gAW,3)) +
     dr('gammaTotal', fmt(g.gTotal,3), true) +
-    dr('µ effectif', fmt(mu,3)+' log/h', true) +
-    dr('population', fmt(logN,2)+' log', true) +
+    dr(t('dg_mu'), fmt(mu,3)+' log/h', true) +
+    dr(t('dg_pop'), fmt(logN,2)+' log', true) +
     `<div class="interp ${it.cls}">${it.txt}</div>`;
 }
 
@@ -911,6 +987,9 @@ drawLegendSwatch('sw-l', 'listeria_monocytogenes');
 drawLegendSwatch('sw-s', 'salmonella_enterica');
 resetAll();
 requestAnimationFrame(loop);
+
+document.querySelectorAll('#langSw button').forEach(b => b.onclick = () => setLang(b.dataset.l));
+applyLang();
 </script>
 </body>
 </html>
