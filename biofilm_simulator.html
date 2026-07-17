@@ -160,26 +160,46 @@
         .codex-entry .c-title { color: #FFD700; font-weight: bold; font-size: 0.95em; }
         .codex-entry .c-body { font-size: 0.82em; color: #cdd6e0; line-height: 1.45; }
         .codex-entry em { color: #aa55ff; font-style: italic; }
+
+        /* Bouton discret de retour à l'accueil */
+        .home-btn {
+            position: fixed; top: 10px; left: 10px; z-index: 9999;
+            font-family: 'Courier Prime', 'Courier New', monospace; font-size: 12px;
+            color: #8fd0d6; text-decoration: none;
+            background: rgba(0,0,0,0.6); border: 2px solid #00777f;
+            padding: 5px 9px; box-shadow: 2px 2px 0 #000; letter-spacing: 1px;
+        }
+        .home-btn:hover { background: #00777f; color: #000; }
+
+        /* Sélecteur de langue */
+        .lang-sw { position: fixed; top: 10px; right: 10px; z-index: 9999; display: flex; }
+        .lang-sw button { font-family: 'Courier Prime','Courier New',monospace; font-size: 12px; font-weight: bold; cursor: pointer;
+            color: #8fd0d6; background: rgba(0,0,0,0.6); border: 2px solid #00777f; padding: 5px 9px; letter-spacing: 1px; }
+        .lang-sw button:first-child { border-right: none; }
+        .lang-sw button.on { color: #000; background: #00e5ee; border-color: #00e5ee; }
     </style>
 </head>
 <body>
 
+    <a href="./index.html" class="home-btn">← Index</a>
+    <div class="lang-sw" id="langSw"><button data-l="fr">FR</button><button data-l="en">EN</button></div>
+
     <div id="arcade-container">
         <div id="top-hud">
             <div class="hud-panel stat-box">
-                <div>Statut: <span id="ui-status" style="color:#ffaa00; font-weight:bold;">Cellule Libre</span></div>
-                <div>Végétatives: <span id="ui-cells" class="stat-value">1</span></div>
-                <div>Spores: <span id="ui-spores" style="color:#aa55ff; font-weight:bold;">0</span></div>
-                <div>Cellules Protégées: <span id="ui-matrix" class="stat-value">0%</span></div>
-                <div>Quorum (QS): <span id="ui-quorum" style="color:#ffaa00; font-weight:bold;">0/10</span></div>
-                <div>Diversité: <span id="ui-diversity" style="color:#aa55ff; font-weight:bold;">1 esp.</span></div>
+                <div><span data-i18n="hud_status">Statut:</span> <span id="ui-status" style="color:#ffaa00; font-weight:bold;">Cellule Libre</span></div>
+                <div><span data-i18n="hud_veg">Végétatives:</span> <span id="ui-cells" class="stat-value">1</span></div>
+                <div><span data-i18n="hud_spores">Spores:</span> <span id="ui-spores" style="color:#aa55ff; font-weight:bold;">0</span></div>
+                <div><span data-i18n="hud_matrix">Cellules Protégées:</span> <span id="ui-matrix" class="stat-value">0%</span></div>
+                <div><span data-i18n="hud_quorum">Quorum (QS):</span> <span id="ui-quorum" style="color:#ffaa00; font-weight:bold;">0/10</span></div>
+                <div><span data-i18n="hud_diversity">Diversité:</span> <span id="ui-diversity" style="color:#aa55ff; font-weight:bold;">1 esp.</span></div>
             </div>
             <div class="hud-panel stat-box" style="text-align: right;">
-                <div>Énergie (ATP): <span id="ui-atp" style="color:#FFD700; font-weight:bold; font-size:1.2em;">0</span></div>
-                <div>Colmatage: <span id="ui-clog" class="stat-value">0%</span></div>
-                <div>Prochain NEP: <span id="ui-nep-timer" style="color:#ffaa00;">180</span></div>
+                <div><span data-i18n="hud_atp">Énergie (ATP):</span> <span id="ui-atp" style="color:#FFD700; font-weight:bold; font-size:1.2em;">0</span></div>
+                <div><span data-i18n="hud_clog">Colmatage:</span> <span id="ui-clog" class="stat-value">0%</span></div>
+                <div><span data-i18n="hud_nep">Prochain NEP:</span> <span id="ui-nep-timer" style="color:#ffaa00;">180</span></div>
                 <div id="cip-warning">⚠️ NETTOYAGE EN COURS !</div>
-                <div id="atp-bonus-alert">BONUS ATP ACTIF ! (+200%)</div>
+                <div id="atp-bonus-alert" data-i18n="atp_bonus_alert">BONUS ATP ACTIF ! (+200%)</div>
             </div>
         </div>
 
@@ -188,22 +208,22 @@
             
             <div id="pause-overlay" class="overlay">
                 <div class="overlay-box" style="border-color:#00ffff;">
-                    <h2 style="color:#00ffff;">PAUSE</h2>
-                    <div class="blink-text">Appuyez sur PAUSE pour reprendre</div>
+                    <h2 style="color:#00ffff;" data-i18n="pause_title">PAUSE</h2>
+                    <div class="blink-text" data-i18n="pause_hint">Appuyez sur PAUSE pour reprendre</div>
                 </div>
             </div>
             <div id="win-overlay" class="overlay">
                 <div class="overlay-box" id="win-box">
-                    <h2>COLMATAGE ATTEINT !</h2>
-                    <p>Le biofilm a totalement obstrué la canalisation.</p>
-                    <div class="blink-text">Appuyez sur ACTION pour recommencer</div>
+                    <h2 data-i18n="win_title">COLMATAGE ATTEINT !</h2>
+                    <p data-i18n="win_body">Le biofilm a totalement obstrué la canalisation.</p>
+                    <div class="blink-text" data-i18n="win_hint">Appuyez sur ACTION pour recommencer</div>
                 </div>
             </div>
             <div id="lose-overlay" class="overlay">
                 <div class="overlay-box" id="lose-box">
-                    <h2>ÉRADICATION TOTALE !</h2>
-                    <p>Toutes les cellules ont été détruites par le NEP.</p>
-                    <div class="blink-text">Touchez l'écran / Espace pour recommencer</div>
+                    <h2 data-i18n="lose_title">ÉRADICATION TOTALE !</h2>
+                    <p data-i18n="lose_body">Toutes les cellules ont été détruites par le NEP.</p>
+                    <div class="blink-text" data-i18n="lose_hint">Touchez l'écran / Espace pour recommencer</div>
                 </div>
             </div>
 
@@ -219,49 +239,132 @@
             <div id="intro-overlay" class="overlay">
                 <div class="overlay-box" id="intro-box">
                     <h2>BIOFILM SIMULATOR</h2>
-                    <p><span class="goal">But : colmater la canalisation à 100 %</span> en développant ton biofilm.</p>
-                    <div class="phase">◈ PHASE 1 — Adhésion</div>
-                    <p>Tu es une bactérie libre emportée par le flux. Rejoins une paroi (haut ou bas) et maintiens-toi contre elle pour t'y fixer.<br>
-                    Clavier : <b>flèches</b> · Tactile : <b>croix directionnelle</b>.</p>
-                    <div class="phase">◈ PHASE 2 — Construction</div>
-                    <p>Dépense ton <b style="color:#FFD700">ATP</b> pour croître, sécréter ta matrice, sporuler…<br>
-                    Clavier : <b>← →</b> pour choisir une action, <b>Espace</b> pour l'exécuter · Tactile : <b>touche un bouton</b>.</p>
-                    <p class="warn">⚠ Les cycles de nettoyage (NEP) détruisent les cellules non protégées. Tu perds si toutes tes cellules disparaissent.</p>
-                    <p style="font-size:0.78em; color:#8899aa;">ℹ Le bouton CODEX (en bas) explique la vraie science derrière chaque action.</p>
-                    <div style="text-align:center;"><span class="big-btn" id="btn-start">▶ COMMENCER</span></div>
+                    <p data-i18n-html="intro_goal"></p>
+                    <div class="phase" data-i18n="intro_phase1">◈ PHASE 1 — Adhésion</div>
+                    <p data-i18n-html="intro_p1"></p>
+                    <div class="phase" data-i18n="intro_phase2">◈ PHASE 2 — Construction</div>
+                    <p data-i18n-html="intro_p2"></p>
+                    <p class="warn" data-i18n="intro_warn">⚠ Les cycles de nettoyage (NEP) détruisent les cellules non protégées. Tu perds si toutes tes cellules disparaissent.</p>
+                    <p style="font-size:0.78em; color:#8899aa;" data-i18n="intro_codex_hint">ℹ Le bouton CODEX (en bas) explique la vraie science derrière chaque action.</p>
+                    <div style="text-align:center;"><span class="big-btn" id="btn-start" data-i18n="btn_start">▶ COMMENCER</span></div>
                 </div>
             </div>
 
             <!-- Codex scientifique -->
             <div id="codex-overlay" class="overlay">
                 <div class="overlay-box" id="codex-box">
-                    <h2>CODEX — La science du biofilm</h2>
-                    <div class="codex-entry"><div class="c-title">Adhésion</div><div class="c-body">Les bactéries s'attachent d'abord de façon réversible (forces faibles), puis irréversible via adhésines, pili et fibres curli. C'est la première étape de tout biofilm.</div></div>
-                    <div class="codex-entry"><div class="c-title">Croissance &amp; architecture</div><div class="c-body">Division cellulaire et sécrétion de matrice bâtissent une structure 3D, avec tours et canaux d'eau qui irriguent la colonie.</div></div>
-                    <div class="codex-entry"><div class="c-title">Matrice (EPS)</div><div class="c-body">Réseau de polysaccharides, protéines et ADN extracellulaire. Elle retient l'eau et les nutriments, et surtout <b>limite la diffusion des biocides</b> — d'où la résistance au nettoyage. Sa production a un coût métabolique élevé.</div></div>
-                    <div class="codex-entry"><div class="c-title">Quorum sensing</div><div class="c-body">Communication chimique dépendant de la densité de population (AHL chez les Gram−, peptides auto-inducteurs chez les Gram+, AI-2 « universel »). Au-delà d'un seuil, la colonie coordonne matrice, sporulation et dispersion. C'est pourquoi ces actions ne se débloquent qu'au quorum.</div></div>
-                    <div class="codex-entry"><div class="c-title">Sporulation</div><div class="c-body">Chez les Firmicutes, la carence et le stress déclenchent la formation d'<b>une endospore par cellule</b>, extrêmement résistante (chaleur, chimie, dessiccation), sous contrôle du quorum (Spo0A). En agro-alimentaire : <em>Bacillus cereus</em>, <em>Clostridium botulinum</em>/<em>perfringens</em>, et les thermophiles <em>Geobacillus</em>/<em>Anoxybacillus</em> du secteur laitier. Ici, plus la colonie est stressée, plus la sporulation est massive.</div></div>
-                    <div class="codex-entry"><div class="c-title">Germination</div><div class="c-body">Retour de la spore à l'état végétatif lorsque les conditions redeviennent favorables (nutriments, absence de stress).</div></div>
-                    <div class="codex-entry"><div class="c-title">Dispersion / détachement</div><div class="c-body">Des cellules se détachent pour coloniser de nouveaux sites en aval : c'est le mécanisme clé de recontamination des lignes de production.</div></div>
-                    <div class="codex-entry"><div class="c-title">Nettoyage en place (NEP/CIP)</div><div class="c-body">Chaque cycle est d'un type tiré au sort — <b>alcalin</b> (soude), <b>acide</b>, <b>oxydant</b> (acide peracétique) ou <b>thermique</b> — et chaque espèce y est plus ou moins sensible. Une matrice épaisse limite la diffusion du biocide ; un biofilm mature résiste bien mieux qu'une cellule isolée.</div></div>
-                    <div class="codex-entry"><div class="c-title">Bactéries exogènes &amp; diversité</div><div class="c-body">Les biofilms réels sont multi-espèces. Une cellule étrangère qui percute le biofilm s'y <b>intègre</b> et se reproduit comme les autres. Comme chaque espèce résiste à des NEP différentes, <b>une communauté diversifiée survit mieux</b> aux nettoyages variés — et produit plus d'ATP.</div></div>
-                    <div style="text-align:center;"><span class="big-btn" id="codex-close">FERMER</span></div>
+                    <h2 data-i18n="cdx_title">CODEX — La science du biofilm</h2>
+                    <div class="codex-entry"><div class="c-title" data-i18n="cdx_adh_t">Adhésion</div><div class="c-body" data-i18n-html="cdx_adh_b"></div></div>
+                    <div class="codex-entry"><div class="c-title" data-i18n="cdx_grow_t">Croissance &amp; architecture</div><div class="c-body" data-i18n-html="cdx_grow_b"></div></div>
+                    <div class="codex-entry"><div class="c-title" data-i18n="cdx_eps_t">Matrice (EPS)</div><div class="c-body" data-i18n-html="cdx_eps_b"></div></div>
+                    <div class="codex-entry"><div class="c-title" data-i18n="cdx_qs_t">Quorum sensing</div><div class="c-body" data-i18n-html="cdx_qs_b"></div></div>
+                    <div class="codex-entry"><div class="c-title" data-i18n="cdx_spor_t">Sporulation</div><div class="c-body" data-i18n-html="cdx_spor_b"></div></div>
+                    <div class="codex-entry"><div class="c-title" data-i18n="cdx_germ_t">Germination</div><div class="c-body" data-i18n-html="cdx_germ_b"></div></div>
+                    <div class="codex-entry"><div class="c-title" data-i18n="cdx_disp_t">Dispersion / détachement</div><div class="c-body" data-i18n-html="cdx_disp_b"></div></div>
+                    <div class="codex-entry"><div class="c-title" data-i18n="cdx_nep_t">Nettoyage en place (NEP/CIP)</div><div class="c-body" data-i18n-html="cdx_nep_b"></div></div>
+                    <div class="codex-entry"><div class="c-title" data-i18n="cdx_exo_t">Bactéries exogènes &amp; diversité</div><div class="c-body" data-i18n-html="cdx_exo_b"></div></div>
+                    <div style="text-align:center;"><span class="big-btn" id="codex-close" data-i18n="codex_close">FERMER</span></div>
                 </div>
             </div>
         </div>
 
         <div id="controls-panel">
-            <div class="action-btn" id="btn-0">Croissance H <span class="btn-cost">-20 ATP</span></div>
-            <div class="action-btn" id="btn-1">Croissance V <span class="btn-cost">-30 ATP</span></div>
-            <div class="action-btn" id="btn-2">Sécréter Matrice <span class="btn-cost">-40 ATP</span></div>
-            <div class="action-btn" id="btn-3">Sporuler <span class="btn-cost">-60 ATP</span></div>
-            <div class="action-btn" id="btn-4">Germination <span class="btn-cost">-20 ATP</span></div>
-            <div class="action-btn" id="btn-5">Détachement <span class="btn-cost" style="color:#00ffff;">+ Bonus ATP</span></div>
-            <div id="btn-codex">ℹ CODEX</div>
+            <div class="action-btn" id="btn-0"><span data-i18n="act_growH">Croissance H</span> <span class="btn-cost">-20 ATP</span></div>
+            <div class="action-btn" id="btn-1"><span data-i18n="act_growV">Croissance V</span> <span class="btn-cost">-30 ATP</span></div>
+            <div class="action-btn" id="btn-2"><span data-i18n="act_matrix">Sécréter Matrice</span> <span class="btn-cost">-40 ATP</span></div>
+            <div class="action-btn" id="btn-3"><span data-i18n="act_spor">Sporuler</span> <span class="btn-cost">-60 ATP</span></div>
+            <div class="action-btn" id="btn-4"><span data-i18n="act_germ">Germination</span> <span class="btn-cost">-20 ATP</span></div>
+            <div class="action-btn" id="btn-5"><span data-i18n="act_detach">Détachement</span> <span class="btn-cost" style="color:#00ffff;" data-i18n="cost_bonus">+ Bonus ATP</span></div>
+            <div id="btn-codex" data-i18n="btn_codex">ℹ CODEX</div>
         </div>
     </div>
 
 <script>
+
+/* ===================== INTERNATIONALISATION (FR / EN) ===================== */
+const I18N = {
+ fr: {
+  hud_status:"Statut:", hud_veg:"Végétatives:", hud_spores:"Spores:", hud_matrix:"Cellules Protégées:",
+  hud_quorum:"Quorum (QS):", hud_diversity:"Diversité:", hud_atp:"Énergie (ATP):", hud_clog:"Colmatage:", hud_nep:"Prochain NEP:",
+  status_free:"Cellule Libre", status_fixed:"Biofilm Fixé", quorum_active:"ACTIF ✓", div_unit:"esp.",
+  atp_bonus_alert:"BONUS ATP ACTIF ! (+200%)",
+  cip_warning:"⚠️ NEP {t} EN COURS !",
+  nep_alkaline:"ALCALIN", nep_acid:"ACIDE", nep_oxidant:"OXYDANT", nep_thermal:"THERMIQUE",
+  pause_title:"PAUSE", pause_hint:"Appuyez sur PAUSE pour reprendre",
+  win_title:"COLMATAGE ATTEINT !", win_body:"Le biofilm a totalement obstrué la canalisation.", win_hint:"Appuyez sur ACTION pour recommencer",
+  lose_title:"ÉRADICATION TOTALE !", lose_body:"Toutes les cellules ont été détruites par le NEP.", lose_hint:"Touchez l'écran / Espace pour recommencer",
+  intro_goal:"<span class='goal'>But : colmater la canalisation à 100 %</span> en développant ton biofilm.",
+  intro_phase1:"◈ PHASE 1 — Adhésion",
+  intro_p1:"Tu es une bactérie libre emportée par le flux. Rejoins une paroi (haut ou bas) et maintiens-toi contre elle pour t'y fixer.<br>Clavier : <b>flèches</b> · Tactile : <b>croix directionnelle</b>.",
+  intro_phase2:"◈ PHASE 2 — Construction",
+  intro_p2:"Dépense ton <b style='color:#FFD700'>ATP</b> pour croître, sécréter ta matrice, sporuler…<br>Clavier : <b>← →</b> pour choisir une action, <b>Espace</b> pour l'exécuter · Tactile : <b>touche un bouton</b>.",
+  intro_warn:"⚠ Les cycles de nettoyage (NEP) détruisent les cellules non protégées. Tu perds si toutes tes cellules disparaissent.",
+  intro_codex_hint:"ℹ Le bouton CODEX (en bas) explique la vraie science derrière chaque action.",
+  btn_start:"▶ COMMENCER",
+  cdx_title:"CODEX — La science du biofilm",
+  cdx_adh_t:"Adhésion", cdx_adh_b:"Les bactéries s'attachent d'abord de façon réversible (forces faibles), puis irréversible via adhésines, pili et fibres curli. C'est la première étape de tout biofilm.",
+  cdx_grow_t:"Croissance & architecture", cdx_grow_b:"Division cellulaire et sécrétion de matrice bâtissent une structure 3D, avec tours et canaux d'eau qui irriguent la colonie.",
+  cdx_eps_t:"Matrice (EPS)", cdx_eps_b:"Réseau de polysaccharides, protéines et ADN extracellulaire. Elle retient l'eau et les nutriments, et surtout <b>limite la diffusion des biocides</b> — d'où la résistance au nettoyage. Sa production a un coût métabolique élevé.",
+  cdx_qs_t:"Quorum sensing", cdx_qs_b:"Communication chimique dépendant de la densité de population (AHL chez les Gram−, peptides auto-inducteurs chez les Gram+, AI-2 « universel »). Au-delà d'un seuil, la colonie coordonne matrice, sporulation et dispersion. C'est pourquoi ces actions ne se débloquent qu'au quorum.",
+  cdx_spor_t:"Sporulation", cdx_spor_b:"Chez les Firmicutes, la carence et le stress déclenchent la formation d'<b>une endospore par cellule</b>, extrêmement résistante (chaleur, chimie, dessiccation), sous contrôle du quorum (Spo0A). En agro-alimentaire : <em>Bacillus cereus</em>, <em>Clostridium botulinum</em>/<em>perfringens</em>, et les thermophiles <em>Geobacillus</em>/<em>Anoxybacillus</em> du secteur laitier. Ici, plus la colonie est stressée, plus la sporulation est massive.",
+  cdx_germ_t:"Germination", cdx_germ_b:"Retour de la spore à l'état végétatif lorsque les conditions redeviennent favorables (nutriments, absence de stress).",
+  cdx_disp_t:"Dispersion / détachement", cdx_disp_b:"Des cellules se détachent pour coloniser de nouveaux sites en aval : c'est le mécanisme clé de recontamination des lignes de production.",
+  cdx_nep_t:"Nettoyage en place (NEP/CIP)", cdx_nep_b:"Chaque cycle est d'un type tiré au sort — <b>alcalin</b> (soude), <b>acide</b>, <b>oxydant</b> (acide peracétique) ou <b>thermique</b> — et chaque espèce y est plus ou moins sensible. Une matrice épaisse limite la diffusion du biocide ; un biofilm mature résiste bien mieux qu'une cellule isolée.",
+  cdx_exo_t:"Bactéries exogènes & diversité", cdx_exo_b:"Les biofilms réels sont multi-espèces. Une cellule étrangère qui percute le biofilm s'y <b>intègre</b> et se reproduit comme les autres. Comme chaque espèce résiste à des NEP différentes, <b>une communauté diversifiée survit mieux</b> aux nettoyages variés — et produit plus d'ATP.",
+  codex_close:"FERMER",
+  act_growH:"Croissance H", act_growV:"Croissance V", act_matrix:"Sécréter Matrice", act_spor:"Sporuler",
+  act_germ:"Germination", act_detach:"Détachement", cost_bonus:"+ Bonus ATP", btn_codex:"ℹ CODEX",
+ },
+ en: {
+  hud_status:"Status:", hud_veg:"Vegetative:", hud_spores:"Spores:", hud_matrix:"Protected cells:",
+  hud_quorum:"Quorum (QS):", hud_diversity:"Diversity:", hud_atp:"Energy (ATP):", hud_clog:"Clogging:", hud_nep:"Next CIP:",
+  status_free:"Free cell", status_fixed:"Attached biofilm", quorum_active:"ACTIVE ✓", div_unit:"sp.",
+  atp_bonus_alert:"ATP BONUS ACTIVE! (+200%)",
+  cip_warning:"⚠️ {t} CIP IN PROGRESS!",
+  nep_alkaline:"ALKALINE", nep_acid:"ACID", nep_oxidant:"OXIDISING", nep_thermal:"THERMAL",
+  pause_title:"PAUSE", pause_hint:"Press PAUSE to resume",
+  win_title:"PIPE CLOGGED!", win_body:"The biofilm has fully clogged the pipe.", win_hint:"Press ACTION to restart",
+  lose_title:"TOTAL ERADICATION!", lose_body:"All cells were destroyed by the CIP.", lose_hint:"Tap screen / Space to restart",
+  intro_goal:"<span class='goal'>Goal: clog the pipe to 100%</span> by growing your biofilm.",
+  intro_phase1:"◈ PHASE 1 — Attachment",
+  intro_p1:"You are a free bacterium carried by the flow. Reach a wall (top or bottom) and hold against it to attach.<br>Keyboard: <b>arrows</b> · Touch: <b>D-pad</b>.",
+  intro_phase2:"◈ PHASE 2 — Building",
+  intro_p2:"Spend your <b style='color:#FFD700'>ATP</b> to grow, secrete matrix, sporulate…<br>Keyboard: <b>← →</b> to pick an action, <b>Space</b> to run it · Touch: <b>tap a button</b>.",
+  intro_warn:"⚠ Cleaning cycles (CIP) destroy unprotected cells. You lose if all your cells vanish.",
+  intro_codex_hint:"ℹ The CODEX button (below) explains the real science behind each action.",
+  btn_start:"▶ START",
+  cdx_title:"CODEX — The science of biofilm",
+  cdx_adh_t:"Attachment", cdx_adh_b:"Bacteria first attach reversibly (weak forces), then irreversibly via adhesins, pili and curli fibres. This is the first step of any biofilm.",
+  cdx_grow_t:"Growth & architecture", cdx_grow_b:"Cell division and matrix secretion build a 3D structure, with towers and water channels that irrigate the colony.",
+  cdx_eps_t:"Matrix (EPS)", cdx_eps_b:"A network of polysaccharides, proteins and extracellular DNA. It retains water and nutrients and, above all, <b>limits biocide diffusion</b> — hence the resistance to cleaning. Producing it has a high metabolic cost.",
+  cdx_qs_t:"Quorum sensing", cdx_qs_b:"Density-dependent chemical signalling (AHLs in Gram−, autoinducing peptides in Gram+, the 'universal' AI-2). Above a threshold, the colony coordinates matrix, sporulation and dispersal. That is why these actions only unlock at quorum.",
+  cdx_spor_t:"Sporulation", cdx_spor_b:"In Firmicutes, starvation and stress trigger the formation of <b>one endospore per cell</b>, extremely resistant (heat, chemicals, desiccation), under quorum control (Spo0A). In food processing: <em>Bacillus cereus</em>, <em>Clostridium botulinum</em>/<em>perfringens</em>, and the thermophiles <em>Geobacillus</em>/<em>Anoxybacillus</em> of the dairy sector. Here, the more stressed the colony, the more massive the sporulation.",
+  cdx_germ_t:"Germination", cdx_germ_b:"Return of the spore to the vegetative state when conditions become favourable again (nutrients, no stress).",
+  cdx_disp_t:"Dispersal / detachment", cdx_disp_b:"Cells detach to colonise new sites downstream: the key mechanism of recontamination along production lines.",
+  cdx_nep_t:"Cleaning in place (CIP)", cdx_nep_b:"Each cycle is of a random type — <b>alkaline</b> (caustic soda), <b>acid</b>, <b>oxidising</b> (peracetic acid) or <b>thermal</b> — and each species is more or less sensitive to it. A thick matrix limits biocide diffusion; a mature biofilm resists far better than a lone cell.",
+  cdx_exo_t:"Exogenous bacteria & diversity", cdx_exo_b:"Real biofilms are multi-species. A foreign cell that hits the biofilm <b>integrates</b> and reproduces like the others. Since each species resists different CIPs, <b>a diverse community survives better</b> through varied cleanings — and produces more ATP.",
+  codex_close:"CLOSE",
+  act_growH:"Growth H", act_growV:"Growth V", act_matrix:"Secrete Matrix", act_spor:"Sporulate",
+  act_germ:"Germination", act_detach:"Detachment", cost_bonus:"+ ATP Bonus", btn_codex:"ℹ CODEX",
+ },
+};
+const NEP_KEYS = ['nep_alkaline','nep_acid','nep_oxidant','nep_thermal'];
+let lang = "fr";
+try { lang = localStorage.getItem('mbg_lang') || (navigator.language || 'fr').slice(0,2); } catch(e) {}
+if (!I18N[lang]) lang = "fr";
+const t = (key) => (I18N[lang] && I18N[lang][key]) ?? I18N.fr[key] ?? key;
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(n => { n.textContent = t(n.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-html]').forEach(n => { n.innerHTML = t(n.getAttribute('data-i18n-html')); });
+  document.documentElement.lang = lang;
+  document.querySelectorAll('#langSw button').forEach(b => b.classList.toggle('on', b.dataset.l === lang));
+  try {
+    var st = document.getElementById('ui-status');
+    if (st) st.innerText = (gameState === 'PHASE2') ? t('status_fixed') : t('status_free');
+  } catch(e) {}
+}
+function setLang(l){ if(!I18N[l]) return; lang=l; try{ localStorage.setItem('mbg_lang',l); }catch(e){} applyLang(); }
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
 ctx.imageSmoothingEnabled = false; 
@@ -381,7 +484,7 @@ function initGame() {
     bubbles = []; for(let i=0; i<45; i++) bubbles.push(new Bubble());
 
     document.querySelectorAll('.overlay').forEach(el => el.style.display = 'none');
-    document.getElementById('ui-status').innerText = 'Cellule Libre';
+    document.getElementById('ui-status').innerText = t('status_free');
     document.getElementById('ui-status').style.color = '#ffaa00';
     updateMenuUI();
     
@@ -670,7 +773,7 @@ function update(dt) {
                 player.isAttached = true; player.vx = 0; player.vy = 0;
                 gameState = 'PHASE2';
                 for (let k in keys) keys[k] = false; // évite une direction restée "enfoncée" (tactile)
-                document.getElementById('ui-status').innerText = 'Biofilm Fixé';
+                document.getElementById('ui-status').innerText = t('status_fixed');
                 document.getElementById('ui-status').style.color = '#4CAF50';
             }
         } else { adhesionProgress = Math.max(0, adhesionProgress - dt * 1.5); }
@@ -747,7 +850,7 @@ function update(dt) {
                 cipActive = true; cipTimer = 7; cipEventTriggered = false;
                 firstNepPassed = true; // Cache le timer
                 currentNepType = Math.floor(Math.random() * NEP_TYPES.length); // type de nettoyage tiré au sort
-                document.getElementById('cip-warning').innerText = '⚠️ NEP ' + NEP_TYPES[currentNepType].name + ' EN COURS !';
+                document.getElementById('cip-warning').innerText = t('cip_warning').replace('{t}', t(NEP_KEYS[currentNepType]));
                 document.getElementById('cip-warning').style.display = 'block';
             }
         } else {
@@ -799,7 +902,7 @@ function update(dt) {
     let ownTotalAttached = ownCells + ownSpores;
     let quorumEl = document.getElementById('ui-quorum');
     if (ownTotalAttached >= QUORUM_THRESHOLD) {
-        quorumEl.innerText = 'ACTIF ✓'; quorumEl.style.color = '#00ffff';
+        quorumEl.innerText = t('quorum_active'); quorumEl.style.color = '#00ffff';
     } else {
         quorumEl.innerText = ownTotalAttached + '/' + QUORUM_THRESHOLD; quorumEl.style.color = '#ffaa00';
     }
@@ -807,7 +910,7 @@ function update(dt) {
     // Indicateur de diversité (nombre d'espèces intégrées)
     let nSpecies = new Set(cells.filter(c => c.isAttached && !c.isExo).map(c => c.species)).size;
     let divEl = document.getElementById('ui-diversity');
-    divEl.innerText = nSpecies + (nSpecies > 1 ? ' esp. ✦' : ' esp.');
+    divEl.innerText = nSpecies + ' ' + t('div_unit') + (nSpecies > 1 ? ' ✦' : '');
     divEl.style.color = nSpecies > 1 ? '#cc88ff' : '#888';
     
     // Timer caché après la première NEP
@@ -943,6 +1046,8 @@ function showStartScreen() {
     document.getElementById('intro-overlay').style.display = 'flex';
 }
 showStartScreen();
+document.querySelectorAll('#langSw button').forEach(b => b.onclick = () => setLang(b.dataset.l));
+applyLang();
 </script>
 </body>
 </html>

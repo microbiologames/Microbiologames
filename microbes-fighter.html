@@ -77,15 +77,31 @@
   .kcd{flex:0 0 auto; font-size:7px; color:var(--dim); min-width:26px; text-align:right;}
   .foot{font-size:7px; color:var(--dim); text-align:center; margin-top:10px; line-height:1.8;}
   @media (max-width:560px){ .legend{min-width:100%;} #centerHUD{flex-basis:86px; width:86px;} #timer{font-size:15px;} }
+
+  /* Bouton discret de retour à l'accueil */
+  .home-btn{position:fixed; top:8px; left:8px; z-index:9999;
+    font-family:'Press Start 2P', ui-monospace, monospace; font-size:8px;
+    color:#04191c; background:var(--teal); border:none; padding:8px 10px;
+    box-shadow:3px 3px 0 #000; text-decoration:none; letter-spacing:1px;}
+  .home-btn:hover{background:var(--yellow); color:#211a00;}
+
+  /* Sélecteur de langue */
+  .lang-sw{position:fixed; top:8px; right:8px; z-index:9999; display:flex;}
+  .lang-sw button{font-family:'Press Start 2P', ui-monospace, monospace; font-size:8px; cursor:pointer;
+    color:var(--dim); background:var(--panel); border:2px solid var(--line); padding:8px; letter-spacing:1px;}
+  .lang-sw button:first-child{border-right:none;}
+  .lang-sw button.on{color:#04191c; background:var(--yellow); border-color:var(--yellow);}
 </style>
 </head>
 <body>
+<a href="./index.html" class="home-btn">← INDEX</a>
+<div class="lang-sw" id="langSw"><button data-l="fr">FR</button><button data-l="en">EN</button></div>
 <div id="wrap">
-  <h1 class="title">MICROBES FIGHTER<small>Bactérie « vicieuse » vs Microbiologiste — barrières &amp; technologie des hurdles</small></h1>
+  <h1 class="title">MICROBES FIGHTER<small data-i18n="subtitle">Bactérie « vicieuse » vs Microbiologiste — barrières &amp; technologie des hurdles</small></h1>
 
   <div id="topbar">
     <div class="side">
-      <p class="name">BACTÉRIE <span class="k">(Joueur 1)</span></p>
+      <p class="name"><span data-i18n="p1name">BACTÉRIE</span> <span class="k" data-i18n="p1tag">(Joueur 1)</span></p>
       <div class="bar hp" id="hp1"><i></i></div>
       <div class="bar en" id="en1"><i></i></div>
       <div class="shield-tag" id="tag1"></div>
@@ -98,7 +114,7 @@
       </div>
     </div>
     <div class="side right">
-      <p class="name"><span class="k">(Joueur 2)</span> MICROBIOLOGISTE</p>
+      <p class="name"><span class="k" data-i18n="p2tag">(Joueur 2)</span> <span data-i18n="p2name">MICROBIOLOGISTE</span></p>
       <div class="bar hp" id="hp2"><i></i></div>
       <div class="bar en" id="en2"><i></i></div>
       <div class="shield-tag" id="tag2"></div>
@@ -109,33 +125,105 @@
     <canvas id="game" width="960" height="540"></canvas>
     <div class="overlay" id="startScreen">
       <h2>MICROBES FIGHTER</h2>
-      <p>Combat en 2 manches gagnantes. La bactérie attaque à distance et se protège ;
+      <p data-i18n="startDesc">Combat en 2 manches gagnantes. La bactérie attaque à distance et se protège ;
          le microbiologiste applique les barrières (pH, aw, thermique…). À vous d'équilibrer l'écosystème.</p>
       <div class="row">
         <button class="toggle" id="tgl1">Joueur 1 : HUMAIN</button>
         <button class="toggle" id="tgl2">Joueur 2 : HUMAIN</button>
         <button class="toggle on" id="tglSound">SON : ON</button>
       </div>
-      <button class="btn" id="startBtn">▶ COMBAT !</button>
-      <p style="color:var(--dim)">Astuce : mettez un joueur en CPU pour vous entraîner seul.</p>
+      <button class="btn" id="startBtn" data-i18n="startBtn">▶ COMBAT !</button>
+      <p style="color:var(--dim)" data-i18n="hint">Astuce : mettez un joueur en CPU pour vous entraîner seul.</p>
     </div>
     <div class="overlay hidden" id="endScreen">
       <h2 id="endTitle">K.O.</h2>
       <p id="endSub"></p>
-      <button class="btn" id="rematchBtn">REJOUER</button>
+      <button class="btn" id="rematchBtn" data-i18n="rematch">REJOUER</button>
     </div>
   </div>
 
   <div id="legends">
-    <div class="legend p1" id="legend1"><h3>▛ BACTÉRIE — Joueur 1</h3></div>
-    <div class="legend p2" id="legend2"><h3>▜ MICROBIOLOGISTE — Joueur 2</h3></div>
+    <div class="legend p1" id="legend1"><h3 data-i18n="legend1">▛ BACTÉRIE — Joueur 1</h3></div>
+    <div class="legend p2" id="legend2"><h3 data-i18n="legend2">▜ MICROBIOLOGISTE — Joueur 2</h3></div>
   </div>
 
-  <p class="foot">Les valeurs (dégâts, cooldowns, durées) sont regroupées dans <b>CFG</b> en haut du script — faciles à ajuster pour rééquilibrer.</p>
+  <p class="foot" data-i18n="foot">Les valeurs (dégâts, cooldowns, durées) sont regroupées dans <b>CFG</b> en haut du script — faciles à ajuster pour rééquilibrer.</p>
 </div>
 
 <script>
 "use strict";
+
+/* =====================================================================
+   INTERNATIONALISATION (FR / EN)
+   ===================================================================== */
+const I18N = {
+  fr: {
+    subtitle:"Bactérie « vicieuse » vs Microbiologiste — barrières & technologie des hurdles",
+    p1name:"BACTÉRIE", p2name:"MICROBIOLOGISTE", p1tag:"(Joueur 1)", p2tag:"(Joueur 2)",
+    startDesc:"Combat en 2 manches gagnantes. La bactérie attaque à distance et se protège ; le microbiologiste applique les barrières (pH, aw, thermique…). À vous d'équilibrer l'écosystème.",
+    player:"Joueur", human:"HUMAIN", cpu:"CPU", soundLabel:"SON", on:"ON", off:"OFF",
+    startBtn:"▶ COMBAT !", hint:"Astuce : mettez un joueur en CPU pour vous entraîner seul.",
+    rematch:"REJOUER", legend1:"▛ BACTÉRIE — Joueur 1", legend2:"▜ MICROBIOLOGISTE — Joueur 2",
+    foot:"Les valeurs (dégâts, cooldowns, durées) sont regroupées dans CFG en haut du script — faciles à ajuster pour rééquilibrer.",
+    moveLeft:"Gauche", moveRight:"Droite", moveJump:"Saut", noEnergy:"én.",
+    ko:"K.O.", draw:"ÉGALITÉ", victory:"VICTOIRE",
+    roundBac:"Manche pour la bactérie", roundMicro:"Manche pour le microbiologiste", roundNone:"Personne ne cède",
+    bacWins:"LA BACTÉRIE l'emporte !", microWins:"LE MICROBIOLOGISTE l'emporte !", tagGloves:"▮ Gants actifs",
+    // capacités (nom / description)
+    ab_toxin_n:"Toxines", ab_toxin_d:"Projectile à distance",
+    ab_spore_n:"Spore", ab_spore_d:"Résistance +50% (4s)",
+    ab_mult_n:"Multiplication", ab_mult_d:"Dégâts +60% (5s)",
+    ab_biofilm_n:"Biofilm", ab_biofilm_d:"Bouclier {s} PV",
+    ab_vbnc_n:"VBNC", ab_vbnc_d:"Invisible+dormant (3s)",
+    ab_clean_n:"Nettoyage", ab_clean_d:"Désinfection au contact",
+    ab_ph_n:"pH −", ab_ph_d:"Acide + dégâts sur durée",
+    ab_aw_n:"aw −", ab_aw_d:"Déshydrate : ralentit",
+    ab_thermal_n:"Thermique", ab_thermal_d:"Grosse frappe (charge)",
+    ab_gloves_n:"Gants", ab_gloves_d:"Protection +50% (4s)",
+    ab_bunsen_n:"Bec Bunsen", ab_bunsen_d:"Mur de flamme (bloque)",
+  },
+  en: {
+    subtitle:"“Vicious” Bacterium vs Microbiologist — barriers & hurdle technology",
+    p1name:"BACTERIUM", p2name:"MICROBIOLOGIST", p1tag:"(Player 1)", p2tag:"(Player 2)",
+    startDesc:"Best-of-three match. The bacterium attacks at range and shields itself; the microbiologist applies barriers (pH, aw, heat…). Your job: balance the ecosystem.",
+    player:"Player", human:"HUMAN", cpu:"CPU", soundLabel:"SOUND", on:"ON", off:"OFF",
+    startBtn:"▶ FIGHT!", hint:"Tip: set a player to CPU to train solo.",
+    rematch:"REMATCH", legend1:"▛ BACTERIUM — Player 1", legend2:"▜ MICROBIOLOGIST — Player 2",
+    foot:"All values (damage, cooldowns, durations) live in CFG at the top of the script — easy to tweak for rebalancing.",
+    moveLeft:"Left", moveRight:"Right", moveJump:"Jump", noEnergy:"nrg",
+    ko:"K.O.", draw:"DRAW", victory:"VICTORY",
+    roundBac:"Round to the bacterium", roundMicro:"Round to the microbiologist", roundNone:"Nobody yields",
+    bacWins:"THE BACTERIUM WINS!", microWins:"THE MICROBIOLOGIST WINS!", tagGloves:"▮ Gloves active",
+    ab_toxin_n:"Toxins", ab_toxin_d:"Ranged projectile",
+    ab_spore_n:"Spore", ab_spore_d:"Resistance +50% (4s)",
+    ab_mult_n:"Multiplication", ab_mult_d:"Damage +60% (5s)",
+    ab_biofilm_n:"Biofilm", ab_biofilm_d:"Shield {s} HP",
+    ab_vbnc_n:"VBNC", ab_vbnc_d:"Invisible+dormant (3s)",
+    ab_clean_n:"Cleaning", ab_clean_d:"Disinfection on contact",
+    ab_ph_n:"pH −", ab_ph_d:"Acid + damage over time",
+    ab_aw_n:"aw −", ab_aw_d:"Dehydrates: slows",
+    ab_thermal_n:"Thermal", ab_thermal_d:"Heavy strike (charged)",
+    ab_gloves_n:"Gloves", ab_gloves_d:"Protection +50% (4s)",
+    ab_bunsen_n:"Bunsen burner", ab_bunsen_d:"Flame wall (blocks)",
+  },
+};
+let lang = "fr";
+try { lang = localStorage.getItem('mbg_lang') || (navigator.language||'fr').slice(0,2); } catch(e) {}
+if (!I18N[lang]) lang = "fr";
+const t = (key) => (I18N[lang] && I18N[lang][key]) ?? I18N.fr[key] ?? key;
+
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(n => { n.textContent = t(n.getAttribute('data-i18n')); });
+  // boutons à texte dynamique
+  el('tgl1').textContent = t('player')+' 1 : '+(G.p1cpu?t('cpu'):t('human'));
+  el('tgl2').textContent = t('player')+' 2 : '+(G.p2cpu?t('cpu'):t('human'));
+  el('tglSound').textContent = t('soundLabel')+' : '+(soundOn?t('on'):t('off'));
+  document.documentElement.lang = lang;
+  document.querySelectorAll('#langSw button').forEach(b => b.classList.toggle('on', b.dataset.l===lang));
+  buildLegends(); // reconstruit les légendes avec les libellés traduits
+}
+function setLang(l){ if(!I18N[l]) return; lang=l; try{ localStorage.setItem('mbg_lang',l); }catch(e){} applyLang(); }
+
 /* =====================================================================
    MICROBES FIGHTER — moteur de combat 2D pixel-art
    Tout est piloté par CFG (équilibrage) + deux jeux de capacités.
@@ -795,8 +883,8 @@ function drawPops(){ ctx.save(); ctx.font='6px monospace'; ctx.textAlign='center
    ===================================================================== */
 const el = id=>document.getElementById(id);
 function buildLegends(){
-  const info1=[['Q','Gauche'],['D','Droite'],['Z','Saut']];
-  const info2=[['←','Gauche'],['→','Droite'],['↑','Saut']];
+  const info1=[['Q',t('moveLeft')],['D',t('moveRight')],['Z',t('moveJump')]];
+  const info2=[['←',t('moveLeft')],['→',t('moveRight')],['↑',t('moveJump')]];
   legendHTML('legend1','p1', info1, G.p1?G.p1.abilities:makeFighter('bacteria',0).abilities);
   legendHTML('legend2','p2', info2, G.p2?G.p2.abilities:makeFighter('micro',0).abilities);
 }
@@ -808,7 +896,7 @@ function legendHTML(elId, cls, moves, abilities){
   }
   for(const ab of abilities){
     html+=`<div class="krow" data-ab="${ab.id}" data-cls="${cls}"><span class="kbadge">${ab.label}</span>`+
-          `<span class="kdesc"><b>${ab.name}</b> — <span>${ab.desc}</span></span><span class="kcd"></span></div>`;
+          `<span class="kdesc"><b>${t('ab_'+ab.id+'_n')}</b> — <span>${t('ab_'+ab.id+'_d').replace('{s}',CFG.biofilm.shield)}</span></span><span class="kcd"></span></div>`;
   }
   host.innerHTML=html;
 }
@@ -820,7 +908,7 @@ function updateLegendState(f, cls){
     row.classList.remove('ready','cool','noen');
     const cdEl=row.querySelector('.kcd');
     if(cd>0){ row.classList.add('cool'); cdEl.textContent=cd.toFixed(1)+'s'; }
-    else if(f.energy<ab.cost){ row.classList.add('noen'); cdEl.textContent='én.'; }
+    else if(f.energy<ab.cost){ row.classList.add('noen'); cdEl.textContent=t('noEnergy'); }
     else { row.classList.add('ready'); cdEl.textContent='OK'; }
   });
 }
@@ -833,7 +921,7 @@ function updateHUD(){
   el('en1').querySelector('i').style.width=(p1.energy/CFG.energy*100)+'%';
   el('en2').querySelector('i').style.width=(p2.energy/CFG.energy*100)+'%';
   el('tag1').textContent = p1.shield>0 ? ('▮ Biofilm '+Math.ceil(p1.shield)) : '';
-  el('tag2').textContent = (p2.st.gloves||0)>0 ? '▮ Gants actifs' : '';
+  el('tag2').textContent = (p2.st.gloves||0)>0 ? t('tagGloves') : '';
   el('timer').textContent=Math.max(0,Math.ceil(G.timer));
   el('pips1').innerHTML='B '+pips(G.roundWins[0]);
   el('pips2').innerHTML='M '+pips(G.roundWins[1]);
@@ -865,14 +953,14 @@ function endRound(){
 
   if(G.roundWins[0]>=CFG.roundsToWin || G.roundWins[1]>=CFG.roundsToWin){
     G.mode='matchover';
-    const champ = G.roundWins[0]>G.roundWins[1] ? 'LA BACTÉRIE l\'emporte !' : 'LE MICROBIOLOGISTE l\'emporte !';
-    el('endTitle').textContent='VICTOIRE';
+    const champ = G.roundWins[0]>G.roundWins[1] ? t('bacWins') : t('microWins');
+    el('endTitle').textContent=t('victory');
     el('endSub').textContent=champ+'   ('+G.roundWins[0]+' – '+G.roundWins[1]+')';
     el('endScreen').classList.remove('hidden');
   } else {
     G.mode='roundover'; G.roundDelay=1.6;
-    el('endTitle').textContent = winner===0 ? 'ÉGALITÉ' : 'K.O.';
-    el('endSub').textContent = winner===1?'Manche pour la bactérie':(winner===2?'Manche pour le microbiologiste':'Personne ne cède');
+    el('endTitle').textContent = winner===0 ? t('draw') : t('ko');
+    el('endSub').textContent = winner===1?t('roundBac'):(winner===2?t('roundMicro'):t('roundNone'));
     el('endScreen').classList.remove('hidden');
   }
 }
@@ -908,13 +996,14 @@ function loop(now){
 /* ---------- Boutons ---------- */
 el('startBtn').onclick=startMatch;
 el('rematchBtn').onclick=startMatch;
-el('tgl1').onclick=e=>{ G.p1cpu=!G.p1cpu; e.target.textContent='Joueur 1 : '+(G.p1cpu?'CPU':'HUMAIN'); e.target.classList.toggle('on',G.p1cpu); };
-el('tgl2').onclick=e=>{ G.p2cpu=!G.p2cpu; e.target.textContent='Joueur 2 : '+(G.p2cpu?'CPU':'HUMAIN'); e.target.classList.toggle('on',G.p2cpu); };
-el('tglSound').onclick=e=>{ soundOn=!soundOn; e.target.textContent='SON : '+(soundOn?'ON':'OFF'); e.target.classList.toggle('on',soundOn); };
+el('tgl1').onclick=e=>{ G.p1cpu=!G.p1cpu; e.target.textContent=t('player')+' 1 : '+(G.p1cpu?t('cpu'):t('human')); e.target.classList.toggle('on',G.p1cpu); };
+el('tgl2').onclick=e=>{ G.p2cpu=!G.p2cpu; e.target.textContent=t('player')+' 2 : '+(G.p2cpu?t('cpu'):t('human')); e.target.classList.toggle('on',G.p2cpu); };
+el('tglSound').onclick=e=>{ soundOn=!soundOn; e.target.textContent=t('soundLabel')+' : '+(soundOn?t('on'):t('off')); e.target.classList.toggle('on',soundOn); };
+document.querySelectorAll('#langSw button').forEach(b => b.onclick = () => setLang(b.dataset.l));
 
 /* ---------- Init ---------- */
 pickBackground();
-buildLegends();
+applyLang();
 requestAnimationFrame(loop);
 </script>
 </body>
