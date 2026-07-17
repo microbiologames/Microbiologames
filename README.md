@@ -4,6 +4,7 @@ Une petite collection de mini-jeux et outils arcade sur le thème de la
 microbiologie, jouables directement dans le navigateur.
 
 **▶ Jouer en ligne : https://microbiologames.github.io/Microbiologames/**
+Supporter la création : https://patreon.com/Microbiologames?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink
 
 ---
 
