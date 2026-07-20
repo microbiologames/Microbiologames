@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>RATE MY STREAK — isolement sur gélose</title>
+<style>
+:root{
+  --void:#0b0f14; --panel:#141b24; --line:#2a3644;
+  --teal:#00AAB6; --yellow:#FFDD00; --ink:#cfe3e6; --dim:#6d8592; --bad:#ff4d5e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--void); color:var(--ink);
+  font-family:"Courier New",ui-monospace,monospace;
+  display:flex;align-items:center;justify-content:center;padding:8px;
+  overflow:hidden;-webkit-user-select:none;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+#app{width:100%;max-width:430px;display:flex;flex-direction:column;gap:6px}
+.bar{display:flex;align-items:center;gap:8px;background:var(--panel);border:2px solid var(--line);padding:5px 7px}
+.title{font-weight:bold;letter-spacing:2px;font-size:13px;color:var(--yellow)}
+.spacer{flex:1}
+.btn{background:var(--panel);color:var(--ink);border:2px solid var(--line);
+  font-family:inherit;font-size:11px;font-weight:bold;letter-spacing:1px;
+  padding:7px 10px;cursor:pointer;text-transform:uppercase}
+.btn:hover{border-color:var(--teal);color:#fff}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--teal);color:#04222a;border-color:#7fe6ee}
+.btn.primary:hover{background:#22c6d2}
+.btn.ghost{border-color:#3a4a5a;color:var(--dim)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn:focus-visible,.chip:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+#stage{position:relative;background:#070a0e;border:2px solid var(--line)}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}
+.hud{display:flex;gap:6px}
+.gauge{flex:1;background:var(--panel);border:2px solid var(--line);padding:5px 7px}
+.gauge .lbl{font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+.gauge .val{font-size:14px;font-weight:bold;color:var(--yellow);line-height:1.1}
+.track{height:8px;background:#0a0f14;border:1px solid var(--line);margin-top:4px;overflow:hidden}
+.fill{height:100%;width:0%;background:var(--teal)}
+.fill.hot{background:var(--yellow)}
+.fill.max{background:var(--bad)}
+.overlay{position:absolute;inset:0;background:rgba(7,10,14,.945);
+  display:flex;flex-direction:column;padding:13px;gap:8px;overflow-y:auto}
+.overlay.hidden{display:none}
+.ov-title{font-size:15px;font-weight:bold;letter-spacing:2px;color:var(--yellow)}
+.ov-sub{font-size:10px;color:var(--dim);line-height:1.55;letter-spacing:.4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.chip{background:var(--panel);border:2px solid var(--line);padding:7px;cursor:pointer;
+  text-align:left;font-family:inherit;color:var(--ink)}
+.chip:hover{border-color:var(--teal)}
+.chip .n{font-size:10px;font-weight:bold;letter-spacing:.5px;display:flex;align-items:center;gap:5px}
+.chip .d{font-size:9px;color:var(--dim);margin-top:3px;line-height:1.4}
+.swatch{width:10px;height:10px;border:1px solid #000;flex:none;border-radius:50%}
+.grade{font-size:50px;font-weight:bold;line-height:1;letter-spacing:2px}
+.scoreline{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.scoreline .pts{font-size:20px;font-weight:bold;color:var(--yellow)}
+.rows{display:flex;flex-direction:column;gap:5px}
+.row .top{display:flex;font-size:10px;letter-spacing:.5px}
+.row .top .rl{flex:1;color:var(--dim);text-transform:uppercase}
+.row .top .rv{font-weight:bold}
+.rtrack{height:7px;background:#0a0f14;border:1px solid var(--line);margin-top:2px}
+.rfill{height:100%}
+.verdict{border-left:3px solid var(--yellow);padding:6px 8px;background:#11181f;
+  font-size:10px;line-height:1.6}
+.faults{font-size:9px;color:var(--dim);line-height:1.5}
+.brief{background:#11181f;border:1px solid var(--line);padding:7px 9px;font-size:10px;line-height:1.7}
+.brief b{color:var(--teal)}
+.foot{display:flex;gap:6px;margin-top:auto;padding-top:6px}
+.foot .btn{flex:1}
+.toast{position:absolute;left:50%;top:9px;transform:translateX(-50%);
+  background:rgba(255,77,94,.93);color:#fff;font-size:10px;font-weight:bold;
+  letter-spacing:1px;padding:5px 9px;pointer-events:none;opacity:0;
+  transition:opacity .18s;white-space:nowrap}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="bar">
+    <span class="title">RATE MY STREAK</span>
+    <span class="spacer"></span>
+    <button class="btn ghost" id="langBtn">EN</button>
+  </div>
+
+  <div id="stage">
+    <canvas id="cv" width="200" height="200"></canvas>
+    <div class="toast" id="toast"></div>
+
+    <div class="overlay" id="ovMenu">
+      <div class="ov-title" data-i18n="menu_title">CHOISIS TA SOUCHE</div>
+      <div class="ov-sub" data-i18n="menu_sub">Chaque micro-organisme impose un geste différent. Plus la colonie est large, plus il faut écarter les stries.</div>
+      <div class="grid" id="orgGrid"></div>
+      <div class="ov-sub" style="margin-top:auto" data-i18n="menu_how">L'anse part avec 1000 UFC. Trace au doigt des lignes serrées mais qui ne se chevauchent pas : chaque millimètre parcouru épuise l'anse, et les dernières colonies se détachent.</div>
+    </div>
+
+    <div class="overlay hidden" id="ovBrief">
+      <div class="ov-title" id="brTitle">—</div>
+      <div class="brief" id="brBody"></div>
+      <div class="ov-sub" data-i18n="brief_tip">Le dépôt est proportionnel à ce qu'il reste sur l'anse : fort au début, ténu à la fin. Il faut environ 1350 mm de trace pour tout épuiser. La vitesse ne coûte rien, mais trop vite la ligne ondule.</div>
+      <div class="foot">
+        <button class="btn ghost" id="brBack" data-i18n="btn_back">Retour</button>
+        <button class="btn primary" id="brGo" data-i18n="btn_start">Ensemencer</button>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="ovScore">
+      <div class="scoreline">
+        <span class="grade" id="scGrade">A</span>
+        <span class="pts" id="scPts">0</span>
+        <span class="ov-sub" id="scOrg"></span>
+      </div>
+      <div class="rows" id="scRows"></div>
+      <div class="verdict" id="scVerdict"></div>
+      <div class="faults" id="scFaults"></div>
+      <div class="foot">
+        <button class="btn ghost" id="scMenu" data-i18n="btn_menu">Souches</button>
+        <button class="btn primary" id="scRetry" data-i18n="btn_retry">Rejouer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hud">
+    <div class="gauge" style="flex:1.2">
+      <div class="lbl" data-i18n="hud_load">Anse (log UFC)</div>
+      <div class="val" id="loadVal">0%</div>
+      <div class="track"><div class="fill" id="loadFill"></div></div>
+    </div>
+    <div class="gauge">
+      <div class="lbl" data-i18n="hud_strokes">Stries</div>
+      <div class="val" id="strokeVal">0</div>
+      <div class="track"><div class="fill" id="covFill"></div></div>
+    </div>
+    <button class="btn primary" id="incBtn" style="flex:0 0 80px" data-i18n="btn_incubate">Incuber</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const I18N = {
+  fr:{
+    menu_title:"CHOISIS TA SOUCHE",
+    menu_sub:"Chaque micro-organisme impose un geste différent. Plus la colonie est large, plus il faut écarter les stries.",
+    menu_how:"L'anse part avec 1000 UFC. Trace au doigt des lignes serrées mais qui ne se chevauchent pas : chaque millimètre parcouru épuise l'anse, et les dernières colonies se détachent.",
+    brief_tip:"Le dépôt est proportionnel à ce qu'il reste sur l'anse : fort au début, ténu à la fin. Il faut environ 1350 mm de trace pour tout épuiser. La vitesse ne coûte rien, mais trop vite la ligne ondule.",
+    btn_back:"Retour", btn_start:"Ensemencer", btn_menu:"Souches", btn_retry:"Rejouer",
+    btn_incubate:"Incuber", hud_load:"Anse (log UFC)", hud_strokes:"Stries",
+    t_off:"HORS GÉLOSE", t_tear:"GÉLOSE DÉCHIRÉE", t_reload:"RECHARGE EN PLEIN TRACÉ",
+    t_empty:"Anse vide : recroise une strie déjà posée",
+    inc1:"INCUBATION 37°C", inc2:"INCUBATION 25°C",
+    r_iso:"Colonies isolées", r_grad:"Gradient de dilution", r_cov:"Occupation de la boîte", r_ges:"Propreté du geste",
+    v_none:"Rien n'a poussé sur la gélose.",
+    v_lawn:"Nappe confluente : le tracé est trop court ou trop recouvert pour que l'anse s'épuise.",
+    v_thin:"Très peu de matériel déposé.",
+    v_good:"Bel isolement. Lignes serrées, régulières, sans recouvrement, et des colonies bien détachées en fin de parcours.",
+    v_mid:"Le tri se fait mais le geste peut être plus net. Vise des lignes parallèles régulières et va plus loin dans la boîte.",
+    v_cross:"Tu recroises tes propres stries en plein tracé : l'anse se recharge et la dilution repart de zéro.",
+    v_big:"Les colonies se touchent : pour cette souche il faut plus d'écart entre les lignes.",
+    f_off:"sorties de gélose", f_tear:"déchirures", f_cross:"recharges parasites",
+    iso_of:"isolées sur", target:"cible",
+    b_colony:"Colonie", b_target:"Objectif", b_medium:"Milieu", b_advice:"Geste", b_load:"Charge",
+    iso_word:"colonies isolées",
+    r_gap:"Écartement des lignes",
+    r_reg:"Régularité du geste",
+    r_cov:"Occupation de la boîte",
+    t_shaky:"TRACÉ QUI ONDULE — RALENTIS",
+    gap_hint:"écart conseillé",
+    goal_txt:"au moins 1 colonie isolée",
+    b_gap:"Écartement",
+    f_len:"trace :",
+    f_over:"recouvrement",
+    v_overlap:"Tes lignes se recouvrent : l'anse se recharge sur ses propres stries et la dilution repart en arrière. Écarte un peu.",
+    v_wide:"Lignes trop espacées : tu gaspilles la surface et l'anse ne s'épuise jamais assez. Resserre et trace plus long.",
+    v_shaky:"Le tracé ondule : l'écartement part dans tous les sens. Ralentis, la vitesse ne coûte rien tant que la ligne reste nette.",
+    v_noiso:"Aucune colonie vraiment isolée. Continue de tracer plus loin : l'anse doit descendre sous 1 UFC par millimètre.",
+  },
+  en:{
+    menu_title:"PICK YOUR STRAIN",
+    menu_sub:"Every organism demands a different hand. The wider the colony, the further apart your streaks must sit.",
+    menu_how:"The loop starts with 1000 CFU. Draw tight lines that do not overlap: every millimetre travelled empties the loop, and the last colonies break apart.",
+    brief_tip:"Deposition is proportional to what is left on the loop: heavy at first, faint at the end. About 1350 mm of streaking empties it. Speed is free, but too fast and the line wobbles.",
+    btn_back:"Back", btn_start:"Inoculate", btn_menu:"Strains", btn_retry:"Retry",
+    btn_incubate:"Incubate", hud_load:"Loop (log CFU)", hud_strokes:"Streaks",
+    t_off:"OFF THE AGAR", t_tear:"AGAR TORN", t_reload:"RELOAD MID-STROKE",
+    t_empty:"Loop is empty: clip a streak you already laid",
+    inc1:"INCUBATING 37°C", inc2:"INCUBATING 25°C",
+    r_iso:"Isolated colonies", r_grad:"Dilution gradient", r_cov:"Plate coverage", r_ges:"Cleanliness of gesture",
+    v_none:"Nothing grew on the agar.",
+    v_lawn:"Confluent lawn: the streak is too short or too overlapped for the loop to empty.",
+    v_thin:"Very little material laid down.",
+    v_good:"Clean isolation. Tight, even, non-overlapping lines and colonies well detached at the tail.",
+    v_mid:"Sorting happens but the hand can be cleaner. Aim for even parallel lines and travel further across the plate.",
+    v_cross:"You cross your own streaks mid-stroke: the loop reloads and dilution restarts from scratch.",
+    v_big:"Colonies touch: this strain needs wider spacing between lines.",
+    f_off:"off-agar runs", f_tear:"tears", f_cross:"stray reloads",
+    iso_of:"isolated of", target:"target",
+    b_colony:"Colony", b_target:"Goal", b_medium:"Medium", b_advice:"Hand", b_load:"Load",
+    iso_word:"isolated colonies",
+    r_gap:"Line spacing",
+    r_reg:"Steadiness of the hand",
+    r_cov:"Plate coverage",
+    t_shaky:"WOBBLY LINE — SLOW DOWN",
+    gap_hint:"suggested gap",
+    goal_txt:"at least 1 isolated colony",
+    b_gap:"Spacing",
+    f_len:"streak:",
+    f_over:"overlap",
+    v_overlap:"Your lines overlap: the loop reloads on its own streaks and dilution runs backwards. Spread out a little.",
+    v_wide:"Lines too far apart: you waste the surface and the loop never empties. Tighten up and streak further.",
+    v_shaky:"The line wobbles and spacing scatters. Slow down: speed costs nothing as long as the line stays clean.",
+    v_noiso:"No truly isolated colony. Keep streaking further: the loop must drop below 1 CFU per millimetre.",
+  }
+};
+let LANG="fr";
+const T = k => I18N[LANG][k] || k;
+
+const ORGS = [
+  { id:"ecoli", name:{fr:"Escherichia coli",en:"Escherichia coli"},
+    tag:{fr:"petites colonies rondes",en:"small round colonies"},
+    medium:{fr:"Gélose TSA",en:"TSA agar"},
+    agar:"#c9a961", agarDark:"#a1823c", col:"#f4ecd4", colDark:"#c7b688",
+    r:2.4, rVar:.35, n0:1000, isoK:8, shape:"round", temp:1,
+    advice:{fr:"Colonie petite : tu peux te permettre un tracé dense et des stries fines.",
+            en:"Small colony: a dense pattern with fine streaks works well."} },
+
+  { id:"staph", name:{fr:"Staphylococcus aureus",en:"Staphylococcus aureus"},
+    tag:{fr:"très petites colonies noires",en:"very small black colonies"},
+    medium:{fr:"Baird-Parker",en:"Baird-Parker"},
+    agar:"#3d3931", agarDark:"#282520", col:"#191919", colDark:"#0c0c0c", halo:"#ddd6bc",
+    r:2.0, rVar:.3, n0:1000, isoK:9, shape:"halo", temp:1,
+    advice:{fr:"Colonies minuscules à halo clair : le tracé le plus dense de la sélection.",
+            en:"Tiny colonies with a clear halo: the densest pattern in the set."} },
+
+  { id:"bacillus", name:{fr:"Bacillus subtilis",en:"Bacillus subtilis"},
+    tag:{fr:"colonies étalées, envahissantes",en:"spreading, invasive colonies"},
+    medium:{fr:"Gélose nutritive",en:"Nutrient agar"},
+    agar:"#cfc39a", agarDark:"#a3966d", col:"#eae2c6", colDark:"#ada271",
+    r:4.5, rVar:.5, n0:1000, isoK:3, shape:"spread", temp:1,
+    advice:{fr:"Elle envahit. Écarte franchement les stries, sinon tout fusionne en nappe.",
+            en:"It invades. Space streaks generously or everything merges into a lawn."} },
+
+  { id:"yeast", name:{fr:"Saccharomyces cerevisiae",en:"Saccharomyces cerevisiae"},
+    tag:{fr:"colonies crémeuses bombées",en:"creamy domed colonies"},
+    medium:{fr:"Sabouraud",en:"Sabouraud"},
+    agar:"#d8cf9e", agarDark:"#aca373", col:"#fcf7e6", colDark:"#cec39d",
+    r:3.4, rVar:.4, n0:1000, isoK:6, shape:"round", temp:2,
+    advice:{fr:"Taille moyenne, croissance régulière : écartement intermédiaire.",
+            en:"Medium size, steady growth: intermediate spacing."} }
+];
+
+const W=200,H=200,CX=100,CY=100,R=90;
+/* Echelle : 1 px logique = 0.5 mm  ->  boite de 90 mm (R = 90 px, diametre 180 px).
+   N0     : l'anse part avec 1000 UFC.
+   LAMBDA : epuisement exponentiel, dN/ds = -N/LAMBDA. Le depot par mm est
+            proportionnel a la charge restante : fort au debut, faible a la fin.
+            LAMBDA = 200 mm -> il faut ~15 diametres de trace (1350 mm) pour
+            passer de 1000 UFC a moins de 1 UFC.
+   PICK   : recroiser une strie en reprend une part -> ca casse le gradient.     */
+const MM=2, N0=1000, LAMBDA=200*MM, PICK=.30,
+      JIT_SPEED=700, JIT_MAX=2.6, BRUSH=1, MAXCOL=2500, CONF_MULT=2.0;
+let BRUSHCELLS=[],BRUSHAREA=0;
+for(let dy=-BRUSH;dy<=BRUSH;dy++)for(let dx=-BRUSH;dx<=BRUSH;dx++)
+  if(Math.hypot(dx,dy)<=BRUSH+.3){BRUSHCELLS.push([dx,dy]);BRUSHAREA++;}
+let LOG0=Math.log10(N0);
+
+const cv=document.getElementById("cv");
+const ctx=cv.getContext("2d",{alpha:false});
+ctx.imageSmoothingEnabled=false;
+
+function mk(){const c=document.createElement("canvas");c.width=W;c.height=H;return c;}
+const streak=mk(), sctx=streak.getContext("2d");
+const scars=mk(),  scctx=scars.getContext("2d");
+const plateC=mk(), pctx=plateC.getContext("2d");
+const lawnC=mk(),  lctx=lawnC.getContext("2d");
+
+let org=ORGS[0];
+let grid=new Float32Array(W*H);
+let lawnMask=null, lawnCount=0, colonies=[];
+let phase="menu", load=0, strokes=0, strokeDist=0;
+let loadSamples=[], covered=new Set();
+let offSteps=0, jitter=0;
+let pathX=[], pathY=[];                 // trace deposee, pour analyser le geste
+let hashBuckets=new Map();              // hachage spatial du trace
+let drawing=false,lastX=0,lastY=0,lastT=0,incT=0,result=null;
+
+const idx=(x,y)=>y*W+x;
+const inPlate=(x,y)=>{const dx=x-CX,dy=y-CY;return dx*dx+dy*dy<=(R-2)*(R-2);};
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+function hash(x,y){let n=x*374761393+y*668265263;n=(n^(n>>13))*1274126177;return((n^(n>>16))>>>0)/4294967296;}
+function hexRGB(h){const n=parseInt(h.slice(1),16);return`${(n>>16)&255},${(n>>8)&255},${n&255}`;}
+
+/* cached plate */
+function bakePlate(){
+  pctx.clearRect(0,0,W,H);
+  pctx.fillStyle="#070a0e";pctx.fillRect(0,0,W,H);
+  pctx.fillStyle="#3a4450";pctx.beginPath();pctx.arc(CX,CY,R+4,0,7);pctx.fill();
+  pctx.fillStyle="#222b35";pctx.beginPath();pctx.arc(CX,CY,R+1,0,7);pctx.fill();
+  pctx.fillStyle=org.agar;pctx.beginPath();pctx.arc(CX,CY,R,0,7);pctx.fill();
+  pctx.fillStyle=org.agarDark;pctx.globalAlpha=.15;
+  for(let y=CY-R;y<CY+R;y+=2)for(let x=CX-R;x<CX+R;x+=2){
+    if(!inPlate(x,y))continue;
+    if(hash(x|0,y|0)>.72)pctx.fillRect(x|0,y|0,2,2);
+  }
+  pctx.globalAlpha=1;
+  pctx.strokeStyle="rgba(255,255,255,.10)";pctx.lineWidth=2;
+  pctx.beginPath();pctx.arc(CX,CY,R-2,Math.PI*1.05,Math.PI*1.72);pctx.stroke();
+}
+
+function reset(){
+  grid=new Float32Array(W*H);
+  lawnMask=null;lawnCount=0;colonies=[];result=null;
+  load=0;strokes=0;strokeDist=0;loadSamples=[];covered=new Set();
+  offSteps=0;jitter=0;pathX=[];pathY=[];hashBuckets=new Map();
+  incT=0;drawing=false;
+  sctx.clearRect(0,0,W,H);scctx.clearRect(0,0,W,H);lctx.clearRect(0,0,W,H);
+  bakePlate();updateHUD();
+}
+
+/* ---- deposition physics ---- */
+function step(x,y){
+  const xi=Math.round(x),yi=Math.round(y);
+  if(xi<0||yi<0||xi>=W||yi>=H)return;
+
+  // recroiser une strie deja posee en reprend une part : le gradient repart en arriere
+  let picked=0;
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+    const px=xi+dx,py=yi+dy;
+    if(px<0||py<0||px>=W||py>=H)continue;
+    const i=idx(px,py),d=grid[i];
+    if(d>0){const p=d*PICK;grid[i]=d-p;picked+=p;}
+  }
+  if(picked>0)load=Math.min(N0,load+picked);
+
+  // epuisement exponentiel : dN/ds = -N/LAMBDA
+  const dep=load*(1-Math.exp(-1/LAMBDA));
+  load-=dep;
+  if(dep>0){
+    let n=0;const cells=[];
+    for(const[dx,dy]of BRUSHCELLS){
+      const px=xi+dx,py=yi+dy;
+      if(px<0||py<0||px>=W||py>=H)continue;
+      cells.push(idx(px,py));n++;
+    }
+    for(const i of cells)grid[i]+=dep/n;
+  }
+
+  loadSamples.push(load);
+  covered.add((yi>>4)*16+(xi>>4));
+
+  // memoriser le trace pour l'analyse du geste
+  const pi=pathX.length; pathX.push(x); pathY.push(y);
+  const bk=(yi>>3)*64+(xi>>3);
+  let b=hashBuckets.get(bk); if(!b){b=[];hashBuckets.set(bk,b);} b.push(pi);
+
+  const a=clamp(Math.log10(Math.max(load,1))/LOG0,0,1),rgb=hexRGB(org.agarDark);
+  sctx.fillStyle=`rgba(${rgb},${.16+.5*a})`;sctx.fillRect(xi-2,yi-2,5,5);
+  sctx.fillStyle=`rgba(${rgb},${.09+.26*a})`;
+  sctx.fillRect(xi-3,yi-1,7,3);sctx.fillRect(xi-1,yi-3,3,7);
+}
+
+/* ---- pointer ---- */
+function toLocal(e){
+  const r=cv.getBoundingClientRect();
+  return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H};
+}
+cv.addEventListener("pointerdown",e=>{
+  if(phase!=="streak")return;
+  e.preventDefault();
+  try{cv.setPointerCapture(e.pointerId);}catch(_){}
+  const p=toLocal(e);
+  drawing=true;strokeDist=0;lastX=p.x;lastY=p.y;lastT=performance.now();strokes++;
+  if(load<.5)toast(T("t_empty"));
+  if(inPlate(p.x,p.y))step(p.x,p.y);
+  updateHUD();
+});
+cv.addEventListener("pointermove",e=>{
+  if(!drawing||phase!=="streak")return;
+  e.preventDefault();
+  const p=toLocal(e),now=performance.now();
+  const dx=p.x-lastX,dy=p.y-lastY,dist=Math.hypot(dx,dy);
+  if(dist<.6)return;
+  const speed=dist/Math.max(now-lastT,1)*1000;
+
+  /* La vitesse n'est pas penalisee en soi : elle rend le trace imprecis.
+     Au-dela de JIT_SPEED, la main derape lateralement et la ligne ondule,
+     ce qui degrade la regularite et provoque des chevauchements. */
+  jitter=clamp((speed-JIT_SPEED)/1400,0,1)*JIT_MAX;
+
+  // normale a la direction du deplacement
+  const nx=-dy/dist, ny=dx/dist;
+  let wentOff=false;
+  const n=Math.ceil(dist);
+  for(let i=1;i<=n;i++){
+    let x=lastX+dx*i/n, y=lastY+dy*i/n;
+    if(jitter>0){
+      const w=(Math.random()-.5)*2*jitter;
+      x+=nx*w; y+=ny*w;
+    }
+    if(!inPlate(x,y)){offSteps++;wentOff=true;continue;}
+    step(x,y);strokeDist++;
+  }
+  if(wentOff)toast(T("t_off"));
+  else if(jitter>JIT_MAX*.55)toast(T("t_shaky"));
+
+  lastX=p.x;lastY=p.y;lastT=now;updateHUD();
+});
+/* Relever le doigt ne vide plus l'anse : l'epuisement se fait uniquement
+   par la distance parcourue, un trace continu suffit a obtenir le gradient. */
+["pointerup","pointercancel","pointerleave"].forEach(ev=>
+  cv.addEventListener(ev,()=>{if(drawing){drawing=false;jitter=0;updateHUD();}}));
+
+/* ---- toast ---- */
+let toastTimer=null;const toastEl=document.getElementById("toast");
+function toast(m){
+  toastEl.textContent=m;toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>toastEl.classList.remove("show"),900);
+}
+
+/* ---- HUD ---- */
+const loadVal=document.getElementById("loadVal"),loadFill=document.getElementById("loadFill");
+const strokeVal=document.getElementById("strokeVal"),covFill=document.getElementById("covFill");
+const PLATECELLS=Math.PI*R*R/256;
+function updateHUD(){
+  const lg=load<1?0:Math.log10(load);
+  const pct=clamp(lg/LOG0*100,0,100);
+  loadVal.textContent=load<1?"vide":"log "+lg.toFixed(1);
+  loadFill.style.width=pct+"%";
+  loadFill.className="fill"+(pct>75?" max":pct>35?" hot":"");
+  strokeVal.textContent=strokes;
+  covFill.style.width=clamp(covered.size/PLATECELLS*125,0,100)+"%";
+}
+
+/* ---- incubation ---- */
+function poisson(l){if(l<=0)return 0;let L=Math.exp(-l),k=0,p=1;do{k++;p*=Math.random();}while(p>L);return k-1;}
+
+function incubate(){
+  lawnMask=new Uint8Array(W*H);lawnCount=0;colonies=[];
+  // confluence : les colonies fusionnent quand l'espacement le long du trait
+  // descend sous 2r+2.2 px, soit une densite surfacique seuil :
+  const CONF=CONF_MULT/(BRUSHAREA*(2*org.r+2.2));
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    if(!inPlate(x,y))continue;
+    const i=idx(x,y),d=grid[i];
+    if(d<=0)continue;
+    const lam=d;
+    if(lam>CONF){lawnMask[i]=1;lawnCount++;continue;}
+    const n=poisson(lam);
+    for(let k=0;k<n&&colonies.length<MAXCOL;k++){
+      colonies.push({x:x+Math.random()-.5,y:y+Math.random()-.5,
+        rm:org.r*(1+(Math.random()-.5)*org.rVar),
+        t0:Math.random()*.45,seed:Math.random()*1000,iso:false});
+    }
+  }
+  bakeLawn();
+
+  const CELL=16,buckets=new Map(),key=(a,b)=>b*64+a;
+  colonies.forEach((c,i)=>{
+    const k=key(Math.floor(c.x/CELL),Math.floor(c.y/CELL));
+    if(!buckets.has(k))buckets.set(k,[]);
+    buckets.get(k).push(i);
+  });
+  let iso=0;
+  for(let i=0;i<colonies.length;i++){
+    const c=colonies[i];let ok=true;
+    const bx=Math.floor(c.x/CELL),by=Math.floor(c.y/CELL);
+    outer:
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      const b=buckets.get(key(bx+dx,by+dy));if(!b)continue;
+      for(const j of b){
+        if(j===i)continue;
+        const o=colonies[j];
+        if(Math.hypot(c.x-o.x,c.y-o.y)<c.rm+o.rm+2.2){ok=false;break outer;}
+      }
+    }
+    if(ok){
+      const rr=Math.ceil(c.rm+2.5);
+      scan:
+      for(let dy=-rr;dy<=rr;dy+=2)for(let dx=-rr;dx<=rr;dx+=2){
+        if(Math.hypot(dx,dy)>c.rm+2.5)continue;
+        const px=Math.round(c.x+dx),py=Math.round(c.y+dy);
+        if(px<0||py<0||px>=W||py>=H)continue;
+        if(lawnMask[idx(px,py)]){ok=false;break scan;}
+      }
+    }
+    c.iso=ok;if(ok)iso++;
+  }
+  result=grade(iso);
+  phase="incubate";incT=0;
+}
+
+function bakeLawn(){
+  lctx.clearRect(0,0,W,H);
+  const img=lctx.createImageData(W,H),d=img.data;
+  const c1=parseInt(org.col.slice(1),16),c2=parseInt(org.colDark.slice(1),16);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const i=idx(x,y);if(!lawnMask[i])continue;
+    const c=hash(x,y)>.55?c1:c2,o=i*4;
+    d[o]=(c>>16)&255;d[o+1]=(c>>8)&255;d[o+2]=c&255;d[o+3]=255;
+  }
+  lctx.putImageData(img,0,0);
+}
+
+/* ---- analyse du geste ----------------------------------------------------
+   Un bon isolement : des lignes serrees mais qui ne se chevauchent pas.
+   Pour chaque point du trace on cherche le point le plus proche appartenant
+   a un AUTRE passage (ecart d'indice > SEP le long du chemin). La mediane de
+   ces distances donne l'ecartement des lignes ; leur dispersion donne la
+   regularite du geste.                                                      */
+const SEP=70, GAP_MAX=26;
+function analysePath(){
+  const n=pathX.length;
+  if(n<60)return null;
+  const gaps=[];
+  for(let i=0;i<n;i+=3){
+    const x=pathX[i],y=pathY[i];
+    const bx=(Math.round(x))>>3, by=(Math.round(y))>>3;
+    let best=Infinity;
+    for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
+      const b=hashBuckets.get((by+dy)*64+(bx+dx));
+      if(!b)continue;
+      for(const j of b){
+        if(Math.abs(j-i)<=SEP)continue;
+        const d=Math.hypot(pathX[j]-x,pathY[j]-y);
+        if(d<best)best=d;
+      }
+    }
+    gaps.push(Math.min(best,GAP_MAX));
+  }
+  gaps.sort((p,q)=>p-q);
+  const med=gaps[gaps.length>>1];
+  const q1=gaps[Math.floor(gaps.length*.25)], q3=gaps[Math.floor(gaps.length*.75)];
+  let overlap=0; for(const g of gaps) if(g<2.5) overlap++;
+  return {med, spread:(q3-q1)/Math.max(med,1), overlap:overlap/gaps.length, len:n};
+}
+
+/* ---- grading ---- */
+function grade(iso){
+  const A=analysePath();
+  const ideal=2*org.r+2.2;          // distance en dessous de laquelle deux colonies se touchent
+
+  /* 1. ECARTEMENT DES LIGNES : serre mais sans chevauchement.
+        Optimum entre ideal et 2.1 x ideal. */
+  let sGap=0;
+  if(A){
+    const r=A.med/ideal;
+    if(r<1)      sGap=100*Math.pow(clamp(r/1,0,1),1.6);       // trop serre / superpose
+    else if(r<=2.1) sGap=100;                                  // zone ideale
+    else         sGap=100*clamp(1-(r-2.1)/2.2,0,1);            // trop espace
+    sGap*= (1-clamp(A.overlap*1.8,0,.75));                     // penalite de recouvrement
+  }
+
+  /* 2. REGULARITE : un geste maitrise donne un ecartement homogene.
+        La vitesse excessive fait onduler la ligne et fait monter la dispersion. */
+  let sReg=0;
+  if(A) sReg=100*clamp(1-(A.spread-0.35)/1.15,0,1);
+
+  /* 3. OCCUPATION DE LA BOITE */
+  const cov=covered.size/PLATECELLS;
+  const sCov=100*clamp(cov/.80,0,1);      // territoire couvert, plus il y en a mieux c'est
+
+  /* 4. COLONIES ISOLEES : une seule suffit deja a marquer, puis rendements
+        decroissants. Pas de fenetre etroite a viser. */
+  const k=org.isoK;
+  const sIso=100*(1-Math.exp(-iso/k));
+
+  let total=Math.round(sGap*.30 + sReg*.20 + sCov*.20 + sIso*.30);
+  total-=Math.min(12, offSteps*0.05);            // sortir de la gelose coute peu
+  total=clamp(Math.round(total),0,100);
+
+  // sans aucune colonie isolee, l'isolement a rate : plafond a C
+  if(iso<1) total=Math.min(total,55);
+
+  const g=total>=92?"S":total>=80?"A":total>=66?"B":total>=48?"C":total>=28?"D":"E";
+
+  const plateArea=Math.PI*R*R;
+  let v;
+  if(colonies.length===0&&lawnCount<40)      v=T("v_none");
+  else if(lawnCount/plateArea>.50)           v=T("v_lawn");
+  else if(A&&A.overlap>.28)                  v=T("v_overlap");
+  else if(A&&A.med>=GAP_MAX*.9)              v=T("v_wide");
+  else if(A&&A.spread>1.1)                   v=T("v_shaky");
+  else if(iso<1)                             v=T("v_noiso");
+  else if(sIso>=70&&sGap>=70)                v=T("v_good");
+  else                                       v=T("v_mid");
+
+  return{iso,sGap,sReg,sCov,sIso,total,g,v,
+         gapMM:A?(A.med*0.5):0, lenMM:A?(A.len*0.5):0, over:A?A.overlap:0};
+}
+
+/* ---- rendering ---- */
+function drawColony(c,r){
+  if(r<=.4)return;
+  if(org.shape==="halo"||org.shape==="fuzzy"){
+    ctx.globalAlpha=org.shape==="fuzzy"?.5:.32;
+    ctx.fillStyle=org.halo;
+    ctx.beginPath();ctx.arc(c.x,c.y,r*(org.shape==="fuzzy"?1.22:1.5),0,7);ctx.fill();
+    ctx.globalAlpha=1;
+  }
+  if(org.shape==="spread"||org.shape==="fuzzy"){
+    ctx.fillStyle=org.colDark;ctx.beginPath();
+    const N=11;
+    for(let i=0;i<N;i++){
+      const a=i/N*Math.PI*2;
+      const k=r*(1+.28*Math.sin(a*3+c.seed)+.16*Math.sin(a*5-c.seed));
+      const px=c.x+Math.cos(a)*k,py=c.y+Math.sin(a)*k;
+      i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+    }
+    ctx.closePath();ctx.fill();
+    ctx.fillStyle=org.col;
+    ctx.beginPath();ctx.arc(c.x,c.y,r*.5,0,7);ctx.fill();
+  }else{
+    ctx.fillStyle=org.colDark;
+    ctx.beginPath();ctx.arc(c.x,c.y,r,0,7);ctx.fill();
+    ctx.fillStyle=org.col;
+    ctx.beginPath();ctx.arc(c.x-r*.18,c.y-r*.18,r*.68,0,7);ctx.fill();
+  }
+}
+let lastFrame=performance.now();
+function loop(now){
+  const dt=Math.min((now-lastFrame)/1000,.05);lastFrame=now;
+  ctx.drawImage(plateC,0,0);
+  ctx.drawImage(streak,0,0);
+  ctx.drawImage(scars,0,0);
+
+  if(phase==="incubate"||phase==="score"){
+    if(phase==="incubate")incT+=dt/2.1;
+    const p=clamp(incT,0,1);
+    ctx.globalAlpha=clamp(p*1.4,0,1);ctx.drawImage(lawnC,0,0);ctx.globalAlpha=1;
+    const ease=t=>t<0?0:t>1?1:1-Math.pow(1-t,2.2);
+    for(const c of colonies)drawColony(c,c.rm*ease((p-c.t0)/(1-c.t0)));
+
+    if(phase==="incubate"){
+      if(incT>=1){phase="score";showScore();}
+      else{
+        ctx.fillStyle="rgba(7,10,14,.82)";ctx.fillRect(0,H-16,W,16);
+        ctx.fillStyle="#FFDD00";ctx.font="8px monospace";
+        ctx.fillText(T(org.temp===1?"inc1":"inc2")+"  "+Math.round(p*24)+"h",6,H-6);
+        ctx.fillStyle="#00AAB6";ctx.fillRect(6,H-4,(W-12)*p,1);
+      }
+    }else{
+      ctx.strokeStyle="rgba(0,170,182,.85)";ctx.lineWidth=1;
+      for(const c of colonies){
+        if(!c.iso)continue;
+        ctx.beginPath();ctx.arc(c.x,c.y,c.rm+2.5,0,7);ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ---- screens ---- */
+const ovMenu=document.getElementById("ovMenu"),ovBrief=document.getElementById("ovBrief"),ovScore=document.getElementById("ovScore");
+function show(el){[ovMenu,ovBrief,ovScore].forEach(o=>o.classList.add("hidden"));if(el)el.classList.remove("hidden");}
+
+function buildMenu(){
+  const g=document.getElementById("orgGrid");g.innerHTML="";
+  ORGS.forEach(o=>{
+    const b=document.createElement("button");
+    b.className="chip";
+    b.innerHTML=`<div class="n"><span class="swatch" style="background:${o.col}"></span>${o.name[LANG]}</div>
+      <div class="d">${o.tag[LANG]}<br>${T("gap_hint")} ${((2*o.r+2.2)*0.5).toFixed(1)}–${((2*o.r+2.2)*1.05).toFixed(1)} mm</div>`;
+    b.onclick=()=>{org=o;LOG0=Math.log10(o.n0);bakePlate();openBrief();};
+    g.appendChild(b);
+  });
+}
+function openBrief(){
+  document.getElementById("brTitle").textContent=org.name[LANG].toUpperCase();
+  document.getElementById("brBody").innerHTML=
+    `<b>${T("b_colony")}</b> · ${org.tag[LANG]}<br>
+     <b>${T("b_medium")}</b> · ${org.medium[LANG]}<br>
+     <b>${T("b_target")}</b> · ${T("goal_txt")}<br>
+     <b>${T("b_gap")}</b> · ${((2*org.r+2.2)*0.5).toFixed(1)}–${((2*org.r+2.2)*1.05).toFixed(1)} ${LANG==="fr"?"mm entre deux lignes voisines":"mm between neighbouring lines"}<br>
+     <b>${T("b_load")}</b> · ${org.n0} ${LANG==="fr"?"UFC sur l'anse, épuisées en ~1350 mm de trace":"CFU on the loop, spent over ~1350 mm of streaking"}<br>
+     <b>${T("b_advice")}</b> · ${org.advice[LANG]}`;
+  phase="brief";show(ovBrief);
+}
+function startGame(){reset();load=org.n0;updateHUD();phase="streak";show(null);document.getElementById("incBtn").disabled=false;}
+function showScore(){
+  const r=result;
+  const gEl=document.getElementById("scGrade");
+  gEl.textContent=r.g;
+  gEl.style.color=r.g==="S"?"#FFDD00":r.g==="A"?"#00AAB6":r.g==="B"?"#8fd66b":r.g==="C"?"#e8a33d":"#ff4d5e";
+  document.getElementById("scPts").textContent=r.total+" / 100";
+  document.getElementById("scOrg").textContent=org.name[LANG];
+  const rows=[
+    [T("r_gap"),r.sGap,r.gapMM.toFixed(1)+" mm"],
+    [T("r_reg"),r.sReg,Math.round(r.sReg)+"%"],
+    [T("r_cov"),r.sCov,Math.round(r.sCov)+"%"],
+    [T("r_iso"),r.sIso,`${r.iso} ${T("iso_of")} ${colonies.length}`]
+  ];
+  document.getElementById("scRows").innerHTML=rows.map(([l,v,x])=>`
+    <div class="row"><div class="top"><span class="rl">${l}</span><span class="rv">${x}</span></div>
+    <div class="rtrack"><div class="rfill" style="width:${clamp(v,0,100)}%;background:${v>70?"#00AAB6":v>40?"#e8a33d":"#ff4d5e"}"></div></div></div>`).join("");
+  document.getElementById("scVerdict").textContent=r.v;
+  const f=[];
+  f.push(`${T("f_len")} ${Math.round(r.lenMM)} mm`);
+  if(r.over>.12)f.push(`${T("f_over")} ${Math.round(r.over*100)}%`);
+  if(offSteps>10)f.push(`${Math.round(offSteps/6)} ${T("f_off")}`);
+  document.getElementById("scFaults").textContent="· "+f.join("   ·   ");
+  show(ovScore);
+  document.getElementById("incBtn").disabled=true;
+}
+
+document.getElementById("brGo").onclick=startGame;
+document.getElementById("brBack").onclick=()=>{phase="menu";show(ovMenu);};
+document.getElementById("incBtn").onclick=()=>{if(phase==="streak")incubate();};
+document.getElementById("scRetry").onclick=startGame;
+document.getElementById("scMenu").onclick=()=>{reset();phase="menu";buildMenu();show(ovMenu);};
+document.getElementById("langBtn").onclick=()=>{
+  LANG=LANG==="fr"?"en":"fr";
+  document.getElementById("langBtn").textContent=LANG==="fr"?"EN":"FR";
+  document.documentElement.lang=LANG;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{el.textContent=T(el.dataset.i18n);});
+  buildMenu();
+  if(phase==="brief")openBrief();
+  if(phase==="score")showScore();
+};
+
+reset();buildMenu();show(ovMenu);
+</script>
+</body>
+</html>
