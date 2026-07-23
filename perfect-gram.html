@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="color-scheme" content="dark only">
+<meta name="supported-color-schemes" content="dark">
+<title>PERFECT GRAM — la coloration au doigt</title>
+<style>
+:root{
+  --void:#07090d; --panel:#121a24; --panel2:#0d141c; --line:#26323f;
+  --teal:#00AAB6; --teal-l:#5fd0d8; --yellow:#FFDD00;
+  --ink:#cfe3e6; --dim:#6d8592; --bad:#ff5a63; --good:#63d68a;
+  --violet:#7b4fd0; --fuchsia:#e0554f;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--void); color:var(--ink);
+  font-family:"Courier New",ui-monospace,monospace;
+  display:flex;align-items:center;justify-content:center;padding:8px;
+  overflow:hidden;-webkit-user-select:none;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+#app{width:100%;max-width:430px;display:flex;flex-direction:column;gap:6px}
+
+.bar{display:flex;align-items:center;gap:6px;background:var(--panel);border:2px solid var(--line);padding:5px 6px}
+.title{font-weight:bold;letter-spacing:2px;font-size:12px;color:var(--yellow);flex:none}
+.spacer{flex:1}
+.btn{background:var(--panel);color:var(--ink);border:2px solid var(--line);
+  font-family:inherit;font-size:11px;font-weight:bold;letter-spacing:1px;
+  padding:7px 9px;cursor:pointer;text-transform:uppercase;white-space:nowrap}
+.btn:hover{border-color:var(--teal);color:#fff}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--teal);color:#04222a;border-color:#7fe6ee}
+.btn.primary:hover{background:#22c6d2}
+.btn.ghost{border-color:#3a4a5a;color:var(--dim)}
+.btn:disabled{opacity:.3;cursor:default}
+.btn:focus-visible,.chip:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+a.btn{text-decoration:none;display:inline-block;flex:none}
+#idxBtn:hover{border-color:var(--yellow);color:var(--yellow)}
+
+#stage{position:relative;background:#04060a;border:2px solid var(--line);overflow:hidden}
+canvas{display:block;width:100%;height:auto;touch-action:none;
+  image-rendering:pixelated;image-rendering:crisp-edges}
+
+/* ---- HUD ---- */
+.hud{display:flex;gap:6px;align-items:stretch}
+.gauge{flex:1;background:var(--panel);border:2px solid var(--line);padding:5px 7px;min-width:0}
+.gauge .lbl{font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gauge .val{font-size:15px;font-weight:bold;color:var(--yellow);line-height:1.15}
+.gauge .val small{font-size:9px;color:var(--dim);font-weight:normal}
+.track{height:9px;background:#070b10;border:1px solid var(--line);margin-top:4px;position:relative;overflow:hidden}
+.fill{height:100%;width:0%;background:var(--teal)}
+.zone{position:absolute;top:0;bottom:0;background:rgba(99,214,138,.30);
+  border-left:1px solid rgba(99,214,138,.8);border-right:1px solid rgba(99,214,138,.8)}
+.needle{position:absolute;top:-1px;bottom:-1px;width:2px;background:var(--yellow)}
+
+/* ---- overlays ---- */
+.overlay{position:absolute;inset:0;background:rgba(4,6,10,.955);
+  display:flex;flex-direction:column;padding:13px;gap:8px;overflow-y:auto;
+  -webkit-overflow-scrolling:touch}
+.overlay.hidden{display:none}
+/* écran de lecture : le champ microscopique doit rester visible au-dessus du panneau */
+.overlay.peek{background:linear-gradient(180deg,
+   rgba(4,6,10,0) 0%, rgba(4,6,10,0) 44%,
+   rgba(4,6,10,.55) 56%, rgba(4,6,10,.94) 68%, rgba(4,6,10,.985) 100%);
+  justify-content:flex-end}
+.ov-title{font-size:15px;font-weight:bold;letter-spacing:2px;color:var(--yellow)}
+.ov-sub{font-size:10px;color:var(--dim);line-height:1.55}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.chip{background:var(--panel);border:2px solid var(--line);padding:7px;cursor:pointer;
+  text-align:left;font-family:inherit;color:var(--ink)}
+.chip:hover{border-color:var(--teal)}
+.chip.wide{grid-column:1 / -1}
+.chip .n{font-size:10px;font-weight:bold;display:flex;align-items:center;gap:5px}
+.chip .d{font-size:9px;color:var(--dim);margin-top:3px;line-height:1.4}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;border:1px solid #000}
+
+.seg{display:flex;gap:0;border:2px solid var(--line)}
+.seg button{flex:1;background:var(--panel);color:var(--dim);border:none;border-right:2px solid var(--line);
+  font-family:inherit;font-size:10px;font-weight:bold;letter-spacing:1px;padding:7px 4px;cursor:pointer}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--teal);color:#04222a}
+
+.proto{background:var(--panel2);border:1px solid var(--line);font-size:10px;line-height:1.75;padding:7px 9px}
+.proto b{color:var(--teal)}
+.proto .crit{color:var(--yellow)}
+
+.grade{font-size:48px;font-weight:bold;line-height:1;letter-spacing:2px}
+.scoreline{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.scoreline .pts{font-size:19px;font-weight:bold;color:var(--yellow)}
+.rows{display:flex;flex-direction:column;gap:4px}
+.row .top{display:flex;font-size:9.5px;letter-spacing:.5px;gap:6px}
+.row .top .rl{flex:1;color:var(--dim);text-transform:uppercase}
+.row .top .rv{font-weight:bold;white-space:nowrap}
+.rtrack{height:6px;background:#070b10;border:1px solid var(--line);margin-top:2px}
+.rfill{height:100%}
+.verdict{border-left:3px solid var(--yellow);padding:6px 8px;background:#10171f;
+  font-size:10px;line-height:1.6}
+.calls{display:flex;gap:6px}
+.calls .btn{flex:1;font-size:12px;padding:11px 6px}
+.foot{display:flex;gap:6px;margin-top:auto;padding-top:6px}
+.foot .btn{flex:1}
+
+.cx-entry{border-left:3px solid var(--teal);background:var(--panel2);padding:7px 9px}
+.cx-entry h4{font-size:10.5px;letter-spacing:1px;color:var(--teal-l);margin-bottom:4px}
+.cx-entry p{font-size:9.5px;line-height:1.65;color:var(--ink)}
+.cx-entry .tgt{display:inline-block;margin-top:5px;font-size:9px;color:var(--yellow);
+  border:1px solid #3d4a2a;background:#161a10;padding:2px 5px}
+.ref{font-size:9px;color:var(--dim);line-height:1.6;border-top:1px solid var(--line);padding-top:7px}
+
+.toast{position:absolute;left:50%;top:9px;transform:translateX(-50%);
+  background:rgba(255,90,99,.94);color:#fff;font-size:10px;font-weight:bold;
+  letter-spacing:1px;padding:5px 9px;pointer-events:none;opacity:0;
+  transition:opacity .18s;white-space:nowrap;z-index:5}
+.toast.show{opacity:1}
+.hint{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:10px;
+  letter-spacing:2px;color:var(--dim);pointer-events:none;animation:bl 1.6s infinite}
+@keyframes bl{0%,100%{opacity:.35}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="bar">
+    <a class="btn ghost" id="idxBtn" href="./index.html" data-i18n="btn_index">&#9664; INDEX</a>
+    <span class="title">PERFECT GRAM</span>
+    <span class="spacer"></span>
+    <button class="btn ghost" id="cxBtn" data-i18n="btn_codex">CODEX</button>
+    <button class="btn ghost" id="langBtn">EN</button>
+  </div>
+
+  <div id="stage">
+    <canvas id="cv" width="160" height="208"></canvas>
+    <div class="toast" id="toast"></div>
+    <div class="hint hidden" id="hint" data-i18n="hint_hold">MAINTIENS LE DOIGT SUR LA LAME</div>
+
+    <!-- ============ MENU ============ -->
+    <div class="overlay" id="ovMenu">
+      <div class="ov-title" data-i18n="menu_title">CHOISIS TA SOUCHE</div>
+      <div class="ov-sub" data-i18n="menu_sub">La paroi décide de tout. Une paroi épaisse retient le complexe cristal violet–iodure, une paroi fine le laisse partir à l'alcool.</div>
+      <div class="grid" id="orgGrid"></div>
+      <div class="ov-sub" style="margin-top:10px" data-i18n="menu_mode">Mode de jeu</div>
+      <div class="seg">
+        <button id="mLearn" class="on" data-i18n="mode_learn">APPRENTISSAGE</button>
+        <button id="mExam" data-i18n="mode_exam">EXAMEN</button>
+      </div>
+      <div class="ov-sub" id="modeDesc" data-i18n="mode_learn_d">La fenêtre de temps visée s'affiche sur la jauge.</div>
+    </div>
+
+    <!-- ============ BRIEF ============ -->
+    <div class="overlay hidden" id="ovBrief">
+      <div class="ov-title" id="brTitle">—</div>
+      <div class="ov-sub" id="brSub"></div>
+      <div class="proto" id="brProto"></div>
+      <div class="ov-sub" data-i18n="brief_tip">Maintiens le doigt sur la lame pour verser. Le chronomètre ne tourne que si le frottis est réellement recouvert.</div>
+      <div class="foot">
+        <button class="btn ghost" id="brBack" data-i18n="btn_back">Retour</button>
+        <button class="btn primary" id="brGo" data-i18n="btn_start">Commencer</button>
+      </div>
+    </div>
+
+    <!-- ============ LECTURE / DÉCLARATION ============ -->
+    <div class="overlay peek hidden" id="ovCall">
+      <div class="ov-title" data-i18n="call_title">TA LECTURE ?</div>
+      <div class="ov-sub" data-i18n="call_sub">Observe le champ au microscope et déclare le Gram tel que tu le lis.</div>
+      <div class="calls">
+        <button class="btn" id="callPos" style="border-color:#7b4fd0;color:#b79aef">GRAM +</button>
+        <button class="btn" id="callNeg" style="border-color:#e0554f;color:#f09a95">GRAM −</button>
+      </div>
+      <div class="ov-sub" data-i18n="call_hint">Violet = complexe retenu. Rose/rouge = décoloré puis contre-coloré.</div>
+    </div>
+
+    <!-- ============ SCORE ============ -->
+    <div class="overlay hidden" id="ovScore">
+      <div class="scoreline">
+        <span class="grade" id="scGrade">A</span>
+        <span class="pts" id="scPts">0</span>
+        <span class="ov-sub" id="scOrg"></span>
+      </div>
+      <div class="verdict" id="scVerdict"></div>
+      <div class="rows" id="scRows"></div>
+      <div class="ov-sub" id="scNote"></div>
+      <div class="foot">
+        <button class="btn ghost" id="scMenu" data-i18n="btn_menu">Souches</button>
+        <button class="btn ghost" id="scCodex" data-i18n="btn_codex">Codex</button>
+        <button class="btn primary" id="scRetry" data-i18n="btn_retry">Rejouer</button>
+      </div>
+    </div>
+
+    <!-- ============ CODEX ============ -->
+    <div class="overlay hidden" id="ovCodex">
+      <div class="ov-title" data-i18n="cx_title">CODEX — LE GRAM</div>
+      <div id="cxBody" style="display:flex;flex-direction:column;gap:7px"></div>
+      <div class="ref" id="cxRef"></div>
+      <div class="foot"><button class="btn primary" id="cxClose" data-i18n="btn_close">Fermer</button></div>
+    </div>
+  </div>
+
+  <!-- ============ HUD ============ -->
+  <div class="hud">
+    <div class="gauge" style="flex:1.35">
+      <div class="lbl" id="stepName">—</div>
+      <div class="val" id="stepTime">0 <small>s</small></div>
+      <div class="track" id="timeTrack"><div class="zone hidden" id="zoneEl"></div><div class="fill" id="timeFill"></div><div class="needle hidden" id="needleEl"></div></div>
+    </div>
+    <div class="gauge" style="flex:.8">
+      <div class="lbl" data-i18n="hud_cover">Couverture</div>
+      <div class="val" id="covVal">0<small>%</small></div>
+      <div class="track"><div class="fill" id="covFill"></div></div>
+    </div>
+    <button class="btn primary" id="nextBtn" style="flex:0 0 76px" data-i18n="btn_next">Suivant</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ==========================================================================
+   PERFECT GRAM — coloration de Gram au doigt
+   Protocole et mécanismes d'après :
+   Beveridge TJ (2001) Use of the Gram stain in microbiology.
+   Biotechnic & Histochemistry 76(3): 111-118.
+   ========================================================================== */
+
+/* -------------------------------------------------- i18n */
+const I18N = {
+fr:{
+  btn_index:"◀ INDEX", btn_codex:"CODEX", btn_close:"Fermer", btn_back:"Retour",
+  btn_start:"Commencer", btn_menu:"Souches", btn_retry:"Rejouer", btn_next:"Suivant",
+  menu_title:"CHOISIS TA SOUCHE",
+  menu_sub:"La paroi décide de tout. Une paroi épaisse retient le complexe cristal violet–iodure, une paroi fine le laisse partir à l'alcool.",
+  menu_mode:"Mode de jeu",
+  mode_learn:"APPRENTISSAGE", mode_exam:"EXAMEN",
+  mode_learn_d:"La fenêtre de temps visée s'affiche sur la jauge.",
+  mode_exam_d:"Le chronomètre seul, sans jauge ni repère : le protocole doit être en tête.",
+  brief_tip:"Maintiens le doigt sur la lame pour verser. Le chronomètre ne tourne que si le frottis est réellement recouvert.",
+  hint_hold:"MAINTIENS LE DOIGT SUR LA LAME",
+  hud_cover:"Couverture",
+  call_title:"TA LECTURE ?",
+  call_sub:"Observe le champ au microscope et déclare le Gram tel que tu le lis.",
+  call_hint:"Violet = complexe retenu. Rose/rouge = décoloré puis contre-coloré.",
+  cx_title:"CODEX — LE GRAM",
+  unknown_name:"SOUCHE INCONNUE",
+  unknown_tag:"identité révélée à la notation",
+  unknown_adv:"Tu ne sais pas ce que tu colores. Applique le protocole à la lettre et lis ce que tu vois.",
+  s_fix:"Fixation à la flamme", s_cv:"Cristal violet", s_iodine:"Lugol (mordant)",
+  s_rinse:"Rinçage à l'eau", s_ethanol:"Éthanol 95 %", s_saf:"Fuchsine de Ziehl",
+  s_rinse2:"Rinçage (stoppe l'alcool)", s_rinse3:"Rinçage final",
+  t_short:"TROP COURT — LE FROTTIS N'EST PAS COUVERT",
+  t_burn:"LA LAME SURCHAUFFE",
+  t_resid:"L'ALCOOL AGIT ENCORE — RINCE",
+  r_fix:"Fixation", r_cv:"Cristal violet", r_iodine:"Lugol", r_rinse:"Rinçages",
+  r_eth:"Décoloration", r_saf:"Contre-coloration", r_read:"Lecture",
+  lbl_target:"cible", lbl_yours:"toi",
+  read_pos:"Gram +", read_neg:"Gram −", read_none:"illisible",
+  truth:"La souche est", you_read:"tu as lu",
+  v_burn:"Cellules brûlées. La flamme a déformé et carbonisé le frottis : les morphologies ne sont plus interprétables, quelle que soit la suite.",
+  v_unfixed:"Frottis mal fixé. La chaleur n'a pas collé les cellules au verre, la plupart sont parties dès le premier rinçage : le champ est presque vide.",
+  v_nocv:"Cristal violet trop bref. Il n'y a pas assez de colorant dans les cellules pour que le mordant ait quelque chose à précipiter.",
+  v_nomordant:"Lugol insuffisant. Sans iodure, le cristal violet reste soluble : il s'échappe à l'alcool même à travers une paroi épaisse. Toute la lame vire au rose.",
+  v_overdecol:"Surdécoloration. La paroi épaisse a fini par céder : le complexe est parti, la fuchsine a recoloré les cellules. C'est le faux Gram négatif, l'erreur la plus classique.",
+  v_underdecol:"Sous-décoloration. L'alcool n'a pas eu le temps de dissoudre la membrane externe : le complexe est resté piégé et la souche se lit à tort Gram positif.",
+  v_nosaf:"Contre-coloration trop brève. Les cellules décolorées ne sont pas recolorées : elles restent quasi invisibles sur le fond.",
+  v_perfect:"Coloration franche. Gradient net, fond propre, morphologie lisible : c'est exactement le résultat qu'on attend d'une lame de référence.",
+  v_good:"Bonne lame. La lecture est sûre, quelques secondes d'écart sur le protocole mais rien qui change le résultat.",
+  v_wrongcall:"La lame était lisible, mais la lecture déclarée ne correspond pas.",
+  v_mid:"Lame exploitable mais perfectible. Les écarts de temps entament le contraste.",
+  n_variable:"Cette souche est Gram variable : en culture jeune, le renouvellement de la paroi est débordé et l'épaisseur diminue. La fenêtre de décoloration se referme, il faut être plus rapide que sur une Gram positif classique.",
+  n_ghost:"Beaucoup de cellules ont lysé pendant la décoloration : il ne reste que des fantômes, sur lesquels la fuchsine ne s'accroche qu'en surface.",
+  n_resid:"L'alcool résiduel a continué d'agir après la fin de l'étape. Enchaîne le rinçage sans attendre.",
+  cx_ref:"Source : Beveridge TJ (2001) Use of the Gram stain in microbiology. Biotechnic & Histochemistry 76(3) : 111-118. Timings, mécanismes et cas Gram variable repris de cet article.",
+  disc:"Simulation pédagogique. Les cinétiques sont simplifiées et ne remplacent aucun mode opératoire de laboratoire."
+},
+en:{
+  btn_index:"◀ INDEX", btn_codex:"CODEX", btn_close:"Close", btn_back:"Back",
+  btn_start:"Start", btn_menu:"Strains", btn_retry:"Retry", btn_next:"Next",
+  menu_title:"PICK YOUR STRAIN",
+  menu_sub:"The wall decides everything. A thick wall traps the crystal violet–iodide complex; a thin one lets alcohol wash it out.",
+  menu_mode:"Game mode",
+  mode_learn:"TRAINING", mode_exam:"EXAM",
+  mode_learn_d:"The target time window is shown on the gauge.",
+  mode_exam_d:"The clock only, no gauge and no markers: the protocol has to be in your head.",
+  brief_tip:"Hold your finger on the slide to pour. The clock only runs while the smear is actually covered.",
+  hint_hold:"HOLD YOUR FINGER ON THE SLIDE",
+  hud_cover:"Coverage",
+  call_title:"YOUR READING?",
+  call_sub:"Look at the field and declare the Gram as you read it.",
+  call_hint:"Purple = complex retained. Pink/red = decolorized then counterstained.",
+  cx_title:"CODEX — THE GRAM STAIN",
+  unknown_name:"UNKNOWN STRAIN",
+  unknown_tag:"identity revealed at scoring",
+  unknown_adv:"You do not know what you are staining. Follow the protocol exactly and read what you see.",
+  s_fix:"Heat fixation", s_cv:"Crystal violet", s_iodine:"Gram's iodine (mordant)",
+  s_rinse:"Water rinse", s_ethanol:"95% ethanol", s_saf:"Carbol fuchsin",
+  s_rinse2:"Rinse (stops the alcohol)", s_rinse3:"Final rinse",
+  t_short:"TOO EARLY — THE SMEAR IS NOT COVERED",
+  t_burn:"THE SLIDE IS OVERHEATING",
+  t_resid:"ALCOHOL STILL ACTING — RINSE",
+  r_fix:"Fixation", r_cv:"Crystal violet", r_iodine:"Iodine", r_rinse:"Rinses",
+  r_eth:"Decolorization", r_saf:"Counterstain", r_read:"Reading",
+  lbl_target:"target", lbl_yours:"you",
+  read_pos:"Gram +", read_neg:"Gram −", read_none:"unreadable",
+  truth:"The strain is", you_read:"you read",
+  v_burn:"Burnt cells. The flame distorted and charred the smear: morphology can no longer be interpreted, whatever follows.",
+  v_unfixed:"Poorly fixed smear. Heat never bonded the cells to the glass and most washed away on the first rinse: the field is nearly empty.",
+  v_nocv:"Crystal violet too brief. There is not enough dye inside the cells for the mordant to precipitate.",
+  v_nomordant:"Not enough iodine. Without iodide the crystal violet stays soluble and escapes in alcohol even through a thick wall. The whole slide turns pink.",
+  v_overdecol:"Over-decolorized. Even the thick wall gave way: the complex left and fuchsin recoloured the cells. This is the false Gram negative, the classic error.",
+  v_underdecol:"Under-decolorized. Alcohol had no time to dissolve the outer membrane: the complex stayed trapped and the strain reads wrongly as Gram positive.",
+  v_nosaf:"Counterstain too brief. Decolorized cells were never recoloured and stay almost invisible against the background.",
+  v_perfect:"Crisp staining. Sharp contrast, clean background, readable morphology — exactly what a reference slide should look like.",
+  v_good:"Good slide. The reading is safe; a few seconds off protocol but nothing that changes the result.",
+  v_wrongcall:"The slide was readable, but the declared reading does not match it.",
+  v_mid:"Usable slide but improvable. Timing drift is eating into the contrast.",
+  n_variable:"This strain is Gram variable: in a young culture, wall turnover cannot keep up and the wall thins. The decolorization window narrows, so you must be faster than on a classic Gram positive.",
+  n_ghost:"Many cells lysed during decolorization: only ghosts remain, and fuchsin only anneals to their surface.",
+  n_resid:"Residual alcohol kept acting after the step ended. Move to the rinse without waiting.",
+  cx_ref:"Source: Beveridge TJ (2001) Use of the Gram stain in microbiology. Biotechnic & Histochemistry 76(3): 111-118. Timings, mechanisms and the Gram-variable case are taken from this article.",
+  disc:"Educational simulation. Kinetics are simplified and replace no laboratory procedure."
+}};
+let LANG="fr";
+const T=k=>(I18N[LANG][k]!==undefined?I18N[LANG][k]:k);
+try{const st=localStorage.getItem("mbg_lang"); if(st==="fr"||st==="en")LANG=st;
+    else if((navigator.language||"fr").slice(0,2)==="en")LANG="en";}catch(e){}
+
+/* -------------------------------------------------- souches
+   t50   : durée d'éthanol (s) à laquelle la moitié du complexe est perdue
+   slope : largeur de la bascule ; plus elle est faible, plus la fenêtre est nette   */
+const ORGS=[
+ {id:"staph", gram:+1, name:"Staphylococcus aureus",
+  tag:{fr:"cocci en amas",en:"cocci in clusters"},
+  pw:3.4, pl:3.4, cluster:true,
+  t50:46, slope:11,
+  note:{fr:"Paroi de 25 nm environ, très riche en peptidoglycane et en acides teichoïques : elle retient le précipité sans difficulté.",
+        en:"A wall roughly 25 nm thick, dense in peptidoglycan and teichoic acids: it holds the precipitate easily."}},
+
+ {id:"listeria", gram:+1, name:"Listeria monocytogenes",
+  tag:{fr:"coccobacilles courts",en:"short coccobacilli"},
+  pw:3.0, pl:5.4,
+  t50:41, slope:10,
+  note:{fr:"Petit bacille Gram positif, souvent en V ou en palissade. La paroi est épaisse mais la cellule est courte : le contraste se joue sur peu de matière.",
+        en:"A small Gram-positive rod, often in V shapes or palisades. The wall is thick but the cell is short, so contrast rests on little material."}},
+
+ {id:"bcer", gram:+1, variable:true, name:"Bacillus cereus",
+  tag:{fr:"gros bacilles, culture jeune",en:"large rods, young culture"},
+  pw:3.4, pl:9.4, chain:true,
+  t50:26, slope:8,
+  note:{fr:"Sporulant responsable de toxi-infections alimentaires, du riz cuit aux produits laitiers. Paroi Gram positif épaisse à l'équilibre, mais en croissance rapide le renouvellement décroche : elle s'amincit et la cellule répond comme une Gram négatif.",
+        en:"A spore-former behind foodborne illness, from cooked rice to dairy. A thick Gram-positive wall at equilibrium, but in fast growth turnover falls behind: it thins and the cell responds like a Gram negative."}},
+
+ {id:"ecoli", gram:-1, name:"Escherichia coli",
+  tag:{fr:"bacilles",en:"rods"},
+  pw:2.8, pl:7.2,
+  t50:8.5, slope:3.2,
+  note:{fr:"Peptidoglycane de 1 à 3 couches seulement, doublé d'une membrane externe lipidique que l'éthanol dissout en quelques secondes.",
+        en:"Only 1 to 3 peptidoglycan layers, backed by a lipid outer membrane that ethanol dissolves within seconds."}},
+
+ {id:"pseudo", gram:-1, name:"Pseudomonas fluorescens",
+  tag:{fr:"bacilles fins",en:"slender rods"},
+  pw:2.2, pl:8.0,
+  t50:7.5, slope:3,
+  note:{fr:"Germe d'altération des produits réfrigérés. Paroi Gram négatif typique : la décoloration est très rapide et beaucoup de cellules lysent.",
+        en:"A spoilage organism of chilled foods. Typical Gram-negative wall: decolorization is very fast and many cells lyse."}}
+];
+
+/* -------------------------------------------------- protocole */
+const ACC=5;                                    // 1 s réelle = 5 s simulées
+const STEPS=[
+ {id:"fix",    key:"s_fix",    target:2.0, tol:0.9, wgt:12, kind:"flame",  real:true},
+ {id:"cv",     key:"s_cv",     target:30,  tol:10,  wgt:12, kind:"liquid", pal:["#3d1f70","#5a2f9c","#9b74e2"]},
+ {id:"iodine", key:"s_iodine", target:30,  tol:10,  wgt:15, kind:"liquid", pal:["#4a3208","#8a6614","#d8b04a"]},
+ {id:"rin1",   key:"s_rinse",  target:5,   tol:5,   wgt:4,  kind:"liquid", pal:["#1d4655","#33707f","#7fc8d8"], rinse:true},
+ {id:"eth",    key:"s_ethanol",target:20,  tol:6,   wgt:20, kind:"liquid", pal:["#5c6670","#98a3ac","#e8f2f8"]},
+ {id:"rin2",   key:"s_rinse2", target:5,   tol:5,   wgt:5,  kind:"liquid", pal:["#1d4655","#33707f","#7fc8d8"], rinse:true},
+ {id:"saf",    key:"s_saf",    target:60,  tol:18,  wgt:11, kind:"liquid", pal:["#5e120f","#a02b26","#f0736c"]},
+ {id:"rin3",   key:"s_rinse3", target:5,   tol:5,   wgt:3,  kind:"liquid", pal:["#1d4655","#33707f","#7fc8d8"], rinse:true}
+];
+const WSUM=STEPS.reduce((a,s)=>a+s.wgt,0);
+
+/* -------------------------------------------------- géométrie
+   Le canevas est volontairement basse définition : 160 x 208 pixels logiques,
+   agrandis par le CSS en `image-rendering: pixelated`. Tout est donc dessiné
+   au pixel, sans dégradé ni anticrénelage, comme dans les autres jeux du hub. */
+const CW=160, CH=208;
+const SW=200, SH=290;                            // repère de la lame
+const TOPY=48, BOTY=172, TOPH=35, BOTH=51, MIDX=80;
+const SMX=SW*0.5, SMY=SH*0.42, SMRX=60, SMRY=44; // frottis
+
+function proj(sx,sy){
+  const t=sy/SH;
+  const hw=TOPH+(BOTH-TOPH)*t;
+  return [MIDX+(sx/SW-0.5)*2*hw, TOPY+(BOTY-TOPY)*t];
+}
+function onSlide(x,y){
+  const t=(y-TOPY)/(BOTY-TOPY);
+  if(t<0||t>1)return false;
+  return Math.abs(x-MIDX) <= TOPH+(BOTH-TOPH)*t;
+}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lerp=(a,b,t)=>a+(b-a)*t;
+
+/* bruit déterministe : la texture ne scintille pas d'une image à l'autre */
+function nz(x,y){let n=(x|0)*374761393+(y|0)*668265263;n=(n^(n>>13))*1274126177;
+  return((n^(n>>16))>>>0)/4294967296;}
+
+/* -------------------------------------------------- fluide (Clavet, double densité) */
+/* Une lame se flotte : la goutte tombe, touche le frottis et s'étale en lentille
+   sous l'effet de la tension superficielle. La gravité ne sert qu'à la chute et à
+   un lent fluage vers le bas ; c'est la relaxation de densité qui étale la flaque. */
+const HR=11, HR2=HR*HR, RHO0=3.6, KP=520, KN=1150, GRAV=12, VMAX=260, PMAX=470;
+const YFLOOR=SH-6;
+let P=[];
+const hashMap=new Map();
+let hashDirty=true;              // le hachage stocke des index : tout ajout/retrait les périme
+function rebuildHash(){
+  hashMap.clear();
+  hashDirty=false;
+  for(let i=0;i<P.length;i++){
+    const k=((P[i].y/HR)|0)*1024+((P[i].x/HR)|0);
+    let b=hashMap.get(k); if(!b){b=[];hashMap.set(k,b);} b.push(i);
+  }
+}
+function fluidStep(dt){
+  if(!P.length){hashMap.clear();hashDirty=false;return;}
+  for(const p of P){
+    p.vy+=GRAV*dt;
+    p.vx*=0.950; p.vy*=0.950;
+    p.vx=clamp(p.vx,-VMAX,VMAX); p.vy=clamp(p.vy,-VMAX,VMAX);
+    p.px=p.x; p.py=p.y;
+    p.x+=p.vx*dt; p.y+=p.vy*dt;
+    p.life+=dt;
+  }
+  rebuildHash();
+  const nb=[],wq=[],ux=[],uy=[];
+  for(let i=0;i<P.length;i++){
+    const p=P[i];
+    const cx=(p.x/HR)|0, cy=(p.y/HR)|0;
+    nb.length=0; wq.length=0; ux.length=0; uy.length=0;
+    let rho=0,rhon=0;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      const b=hashMap.get((cy+dy)*1024+(cx+dx)); if(!b)continue;
+      for(let m=0;m<b.length;m++){
+        const j=b[m]; if(j===i)continue;
+        const q=P[j]; if(q===undefined)continue;
+        const rx=q.x-p.x, ry=q.y-p.y, r2=rx*rx+ry*ry;
+        if(r2>=HR2||r2<1e-9)continue;
+        const r=Math.sqrt(r2), w=1-r/HR;
+        rho+=w*w; rhon+=w*w*w;
+        nb.push(j); wq.push(w); ux.push(rx/r); uy.push(ry/r);
+      }
+    }
+    const pr=KP*(rho-RHO0), prn=KN*rhon;
+    let ax=0, ay=0;
+    for(let m=0;m<nb.length;m++){
+      const w=wq[m];
+      const D=dt*dt*(pr*w+prn*w*w);
+      const Dx=ux[m]*D, Dy=uy[m]*D;
+      const q=P[nb[m]];
+      q.x+=Dx*0.5; q.y+=Dy*0.5;
+      ax-=Dx*0.5;  ay-=Dy*0.5;
+    }
+    p.x+=ax; p.y+=ay;
+  }
+  for(let i=P.length-1;i>=0;i--){
+    const p=P[i];
+    if(!isFinite(p.x)||!isFinite(p.y)){P.splice(i,1);continue;}
+    if(p.x<3){p.x=3;} else if(p.x>SW-3){p.x=SW-3;}
+    if(p.y<2)p.y=2;
+    if(p.y>YFLOOR){p.y=YFLOOR;p.py=YFLOOR;}   // le ménisque retient le liquide au bord
+    p.vx=(p.x-p.px)/dt; p.vy=(p.y-p.py)/dt;
+  }
+  // débordement : le trop-plein tombe de la lame
+  while(P.length>PMAX)P.shift();
+  // le hachage doit refléter le tableau après suppression, sinon les index sont périmés
+  rebuildHash();
+}
+function drain(keep){
+  const n=Math.max(0,Math.floor(P.length*keep));
+  while(P.length>n)P.splice((Math.random()*P.length)|0,1);
+  hashDirty=true;
+  if(!P.length){hashMap.clear();hashDirty=false;}
+}
+function pour(n){
+  for(let i=0;i<n;i++){
+    const x=SMX+(Math.random()-.5)*24, y=SMY-30+Math.random()*5;
+    P.push({x, y, px:x, py:y,
+            vx:(Math.random()-.5)*26, vy:52+Math.random()*20, life:0});
+  }
+  hashDirty=true;
+}
+
+/* -------------------------------------------------- couverture du frottis */
+const SAMPLES=[];
+for(let a=0;a<5;a++)for(let b=0;b<5;b++){
+  const u=(a+.5)/5*2-1, v=(b+.5)/5*2-1;
+  if(u*u+v*v<=1)SAMPLES.push([SMX+u*SMRX*0.86, SMY+v*SMRY*0.86]);
+}
+function coverage(){
+  if(!P.length)return 0;
+  if(hashDirty)rebuildHash();
+  let hit=0;
+  for(const [sx,sy] of SAMPLES){
+    const cx=(sx/HR)|0, cy=(sy/HR)|0;
+    let found=false;
+    for(let dy=-1;dy<=1&&!found;dy++)for(let dx=-1;dx<=1;dx++){
+      const b=hashMap.get((cy+dy)*1024+(cx+dx)); if(!b)continue;
+      for(const j of b){
+        const p=P[j];
+        if(p===undefined)continue;
+        if((p.x-sx)**2+(p.y-sy)**2 < 74){found=true;break;}
+      }
+      if(found)break;
+    }
+    if(found)hit++;
+  }
+  return hit/SAMPLES.length;
+}
+
+/* -------------------------------------------------- état */
+let ORG=null, unknown=false, MODE="learn";
+let phase="menu", si=0, held=false;
+let acc={}, heat=0, ethResid=0, burnFlash=0;
+let cov=0, result=null, field=[], call=0;
+let flameOn=0, slideShake=0;
+let stain={vio:0,red:0,film:1};     // coloration retenue et matière restante sur le verre
+let shown={vio:0,red:0,film:1};     // ce que l'œil voit : suit la coloration avec inertie
+let debris=[];                      // artefacts du champ : débris, cristaux
+
+/* Matière encore collée au verre. Une fixation insuffisante ne se paie pas tout
+   de suite : elle se paie à chaque rinçage, où le frottis part peu à peu.      */
+function filmRemaining(fixQ, rinseTot){
+  return clamp(1-(1-fixQ)*clamp(rinseTot/20,0,1)*0.94, 0.05, 1);
+}
+
+/* grain du frottis et gouttes d'inoculum : positions déterministes */
+function mkRnd(seed){let z=seed>>>0;return()=>{z=(z*1664525+1013904223)>>>0;return z/4294967296;};}
+const RND=mkRnd(20260721);
+const DROPS=[];
+for(let i=0;i<4;i++){
+  const a=RND()*6.283, r=Math.sqrt(RND())*0.46;
+  DROPS.push({x:Math.cos(a)*r, y:Math.sin(a)*r, s:0.46+RND()*0.40, ph:RND()*6.283});
+}
+let cellsGone=0;
+
+const cvEl=document.getElementById("cv");
+const ctx=cvEl.getContext("2d",{alpha:false});
+ctx.imageSmoothingEnabled=false;
+
+function resetRun(){
+  P=[]; hashMap.clear(); hashDirty=false; si=0; held=false;
+  acc={}; for(const s of STEPS)acc[s.id]=0; skipArm=-1;
+  heat=0; ethResid=0; cov=0; result=null; field=[]; call=0;
+  flameOn=0; slideShake=0; burnFlash=0; cellsGone=0;
+  stain={vio:0,red:0,film:1}; shown={vio:0,red:0,film:1}; debris=[]; microReady=false;
+}
+const step=()=>STEPS[si];
+
+/* -------------------------------------------------- entrée */
+function stageActive(){return phase==="play";}
+cvEl.addEventListener("pointerdown",e=>{
+  if(!stageActive())return;
+  e.preventDefault();
+  try{cvEl.setPointerCapture(e.pointerId);}catch(_){}
+  held=true;
+});
+["pointerup","pointercancel","pointerleave"].forEach(ev=>
+  cvEl.addEventListener(ev,()=>{held=false;}));
+
+/* -------------------------------------------------- boucle */
+let last=performance.now(), tAcc=0;
+function loop(now){
+  let dt=(now-last)/1000; last=now;
+  if(dt>0.06)dt=0.06;
+  if(phase==="play")update(dt);
+  render(dt);
+  requestAnimationFrame(loop);
+}
+
+function update(dt){
+  const s=step();
+  if(s.kind==="flame"){
+    flameOn=lerp(flameOn, held?1:0, 1-Math.pow(0.001,dt));
+    if(held){
+      heat+=dt;
+      slideShake=0.6;
+      if(heat>3.0){burnFlash=1; if(Math.random()<dt*3)toast(T("t_burn"));}
+    }
+    cov=clamp(flameOn,0,1);
+  }else{
+    if(held)pour(8);
+    else drain(0.90);   // doigt relevé : la lame s'égoutte, le chrono s'arrête de lui-même
+    // sous-pas fixes pour un fluide stable
+    tAcc+=dt;
+    let guard=0;
+    while(tAcc>=1/60 && guard<4){ fluidStep(1/60); tAcc-=1/60; guard++; }
+    if(guard>=4)tAcc=0;
+    cov=coverage();
+    const eff = cov>=0.6 ? 1 : (cov>=0.25 ? (cov-0.25)/0.35*0.55 : 0);
+    acc[s.id]+=dt*ACC*eff;
+    // l'éthanol résiduel continue d'agir tant qu'on n'a pas rincé
+    if(s.id==="rin2" && cov<0.5){
+      ethResid+=dt*ACC*0.4;
+      if(ethResid>1.5 && Math.random()<dt*1.4)toast(T("t_resid"));
+    }
+  }
+  updateStain();
+  // la couleur du frottis ne saute pas : elle rejoint sa cible en fondu
+  const kk=1-Math.pow(0.045,dt);
+  shown.vio =lerp(shown.vio, stain.vio, kk);
+  shown.red =lerp(shown.red, stain.red, kk);
+  shown.film=lerp(shown.film,stain.film,kk);
+  slideShake*=Math.pow(0.02,dt);
+  burnFlash*=Math.pow(0.05,dt);
+  updateHUD();
+}
+
+let skipArm=-1;
+/* Ce que l'œil voit sur la lame, avec les mêmes lois que la notation :
+   le violet monte au cristal violet, puis reflue pendant la décoloration
+   selon la paroi ; la fuchsine recolore ce qui a été vidé.                 */
+function updateStain(){
+  if(!ORG)return;
+  const cvN  = 1-Math.exp(-acc.cv/12);
+  const mordN= 1-Math.exp(-acc.iodine/11);
+  const ethN = acc.eth+ethResid;
+  const t50  = ORG.t50*(0.20+0.80*mordN);
+  const lossN= 1/(1+Math.exp(-(ethN-t50)/ORG.slope));
+  stain.vio = cvN*(1-lossN);
+  stain.red = counterstain(1-Math.exp(-acc.saf/26), stain.vio);
+  const fixQ=clamp(heat/1.5,0,1);
+  stain.film = filmRemaining(fixQ, acc.rin1+acc.rin2+acc.rin3+ethN*0.45);
+}
+
+function nextStep(){
+  if(phase!=="play")return;
+  const s=step();
+  if(s.kind!=="flame" && acc[s.id]<0.6 && cov<0.3 && skipArm!==si){
+    skipArm=si; toast(T("t_short")); return;   // deuxième appui = on saute l'étape volontairement
+  }
+  si++;
+  P=[]; hashMap.clear(); hashDirty=false; held=false;
+  if(si>=STEPS.length){ finish(); }
+}
+
+/* -------------------------------------------------- modèle biologique */
+// la contre-coloration n'apparaît que sur ce qui a réellement été vidé du complexe
+function counterstain(safU,vio){ return safU*Math.pow(clamp(1-vio,0,1),1.5); }
+
+function computeResult(){
+  const o=ORG;
+  const fixQ = clamp(heat/1.5, 0, 1);                    // adhérence au verre
+  const burn = clamp((heat-3.0)/2.6, 0, 1);              // carbonisation
+  const cvU  = 1-Math.exp(-acc.cv/12);                   // charge en cristal violet
+  const mord = 1-Math.exp(-acc.iodine/11);               // complexe CV-iodure formé
+  const eth  = acc.eth + ethResid;
+  // sans mordant, la paroi épaisse ne sert à rien : le colorant reste soluble
+  const t50  = o.t50*(0.20+0.80*mord);
+  const loss = 1/(1+Math.exp(-(eth-t50)/o.slope));
+  const violet = cvU*mord*(1-loss);
+  const safU = 1-Math.exp(-acc.saf/26);
+  const red  = counterstain(safU,violet);
+  // lyse : la décoloration est l'étape la plus agressive (Beveridge 2001)
+  const rinseTot = acc.rin1+acc.rin2+acc.rin3;
+  const ghost = o.gram<0 ? clamp((eth-12)/26,0,1)*0.55
+                         : clamp((eth-52)/45,0,1)*0.30;
+  const film = filmRemaining(fixQ, rinseTot+eth*0.45);   // matière restée sur le verre
+  const washed = 1-film;
+  let read = 0;
+  if(burn<0.55 && fixQ>0.18){
+    if(violet>0.42) read=+1;
+    else if(red>0.28) read=-1;
+  }
+  const clarity = clamp((1-burn)*(0.25+0.75*fixQ)*(read!==0?1:0.35), 0, 1);
+  return {fixQ,burn,cvU,mord,eth,loss,violet,red,safU,ghost,washed,film,read,clarity,rinseTot};
+}
+
+function stepScore(s){
+  // l'alcool résiduel agit encore après la fin de l'étape : il compte dans la note
+  const t = s.kind==="flame" ? heat : (s.id==="eth" ? acc.eth+ethResid : acc[s.id]);
+  const d = (t-s.target)/s.tol;
+  return {t, sc: 100*Math.exp(-0.5*d*d)};
+}
+
+function finish(){
+  const R=computeResult();
+  buildField(R);
+  microReady=false;
+  result={R, steps:{}};
+  for(const s of STEPS)result.steps[s.id]=stepScore(s);
+  phase="call"; show(ovCall);
+}
+
+function grade(){
+  const R=result.R, S=result.steps;
+  let tech=0, minStep=100;
+  for(const s of STEPS){ tech+=S[s.id].sc*s.wgt; if(S[s.id].sc<minStep)minStep=S[s.id].sc; }
+  tech/=WSUM;
+  const callOK = call===ORG.gram;
+  const lecture = callOK ? 100*(0.45+0.55*R.clarity) : 0;
+  let total = clamp(Math.round(tech*0.75 + lecture*0.25), 0, 100);
+  // une lame qu'on ne peut pas lire ne vaut rien, quelle que soit la propreté des temps
+  if(R.read===0)        total=Math.min(total,34);
+  else if(R.burn>0.5)   total=Math.min(total,30);
+  else if(R.fixQ<0.35)  total=Math.min(total,42);
+  else if(!callOK)      total=Math.min(total,52);
+  const g = total>=92?"S":total>=80?"A":total>=66?"B":total>=48?"C":total>=28?"D":"E";
+
+  let v;
+  if(R.burn>0.5) v="v_burn";
+  else if(R.fixQ<0.42) v="v_unfixed";
+  else if(R.mord<0.33) v="v_nomordant";
+  else if(R.cvU<0.48) v="v_nocv";
+  else if(ORG.gram>0 && R.loss>0.50) v="v_overdecol";
+  else if(ORG.gram<0 && R.loss<0.45) v="v_underdecol";
+  else if(R.safU<0.42 && (ORG.gram<0 || R.read===0)) v="v_nosaf";
+  else if(!callOK) v="v_wrongcall";
+  else if(total>=90 && minStep>=55) v="v_perfect";
+  else if(total>=74) v="v_good";
+  else v="v_mid";
+
+  const notes=[];
+  if(ORG.variable) notes.push("n_variable");
+  if(R.ghost>0.3) notes.push("n_ghost");
+  if(ethResid>2.5) notes.push("n_resid");
+  return {total,g,v,tech,lecture,callOK,notes};
+}
+
+/* -------------------------------------------------- champ microscopique
+   Entièrement construit à partir de l'historique de la partie : le nombre de
+   cellules vient de la fixation et des rinçages, leur état de la flamme et de
+   l'alcool, leur couleur de la loi du Gram appliquée cellule par cellule.     */
+function buildField(R){
+  field=[]; debris=[];
+  const o=ORG;
+  const n = Math.max(0, Math.round(60*R.film));      // ce qui est resté collé au verre
+  const clusters = o.cluster ? Math.max(3,Math.round(n/6)) : 0;
+  let placed=0, guard=0;
+  const STEPN = o.pl/(58*0.86);          // longueur d'une cellule en coordonnées du champ
+  const put=(x,y,ang)=>{
+    field.push({x,y,ang,
+      k:0.72+Math.random()*0.6,        // sensibilité individuelle à l'alcool
+      gh:Math.random()<R.ghost,        // cellule lysée : il ne reste qu'un fantôme
+      br:Math.random()<R.burn*0.92,    // cellule carbonisée par la flamme
+      s:0.88+Math.random()*0.26});
+    placed++;
+  };
+  if(o.cluster){
+    for(let c=0;c<clusters&&placed<n;c++){
+      const cx=(Math.random()*2-1)*0.76, cy=(Math.random()*2-1)*0.76;
+      if(cx*cx+cy*cy>0.75){c--; if(++guard>400)break; continue;}
+      const m=3+Math.floor(Math.random()*5);
+      for(let i=0;i<m&&placed<n;i++)
+        put(cx+(Math.random()-.5)*0.20, cy+(Math.random()-.5)*0.20, Math.random()*6.3);
+    }
+  }
+  while(placed<n && guard<3000){
+    guard++;
+    const x=(Math.random()*2-1)*0.84, y=(Math.random()*2-1)*0.84;
+    if(x*x+y*y>0.78)continue;
+    if(o.chain){
+      // B. cereus pousse en chaînettes : bacilles alignés bout à bout
+      const ang=Math.random()*6.3, m=2+Math.floor(Math.random()*3);
+      for(let i=0;i<m&&placed<n;i++){
+        const cx2=x+Math.cos(ang)*STEPN*i*1.04, cy2=y+Math.sin(ang)*STEPN*i*1.04;
+        if(cx2*cx2+cy2*cy2>0.80)break;
+        put(cx2,cy2,ang+(Math.random()-.5)*0.18);
+      }
+    }else put(x,y,Math.random()*6.3);
+  }
+
+  // Artefacts : ils racontent eux aussi ce qui s'est passé sur la lame.
+  const addDeb=(kind,count,size)=>{
+    for(let i=0;i<count;i++){
+      const a=Math.random()*6.283, r=Math.sqrt(Math.random())*0.82;
+      debris.push({x:Math.cos(a)*r, y:Math.sin(a)*r, kind, n:size, s:Math.random()*1000});
+    }
+  };
+  addDeb("burn",   Math.round(R.burn*26), 4);                       // suie et cellules éclatées
+  addDeb("wash",   Math.round((1-R.film)*22), 2);                   // fragments arrachés au rinçage
+  if(acc.cv>78||acc.iodine>78)                                      // colorant précipité, non rincé
+    addDeb("crystal", Math.round(clamp((Math.max(acc.cv,acc.iodine)-78)/40,0,1)*16), 3);
+}
+
+/* -------------------------------------------------- rendu pixel art
+   Règle : que des rectangles de 1 pixel, aucune transparence progressive.
+   Les demi-teintes sont obtenues par tramage (un pixel sur deux) et par
+   des paliers de couleur, comme sur une palette limitée.                    */
+
+function PR(g,x,y,w,h,c){g.fillStyle=c;g.fillRect(x|0,y|0,w,h);}
+function P1(g,x,y,c){g.fillStyle=c;g.fillRect(x|0,y|0,1,1);}
+
+const PAL={
+  glassLo:"#1c2e3a", glassMi:"#27404f", glassHi:"#446b82", glassEdge:"#8ed2e4",
+  film:["#dfe4d6","#b6bdad","#8e9587"],
+  burn:["#6d4a1f","#452a10","#26180a"],
+  vio :["#8b5fd8","#5a2f9c","#341a5c"],
+  red :["#e8635c","#a02b26","#5c130f"],
+  steam:["#cfe6ee","#8fb4c4"],
+  scope:["#efe7d6","#dcd2be","#c2b8a2","#9d9483"]
+};
+
+/* ---------- lame ----------
+   Le verre ne change pas d'une image à l'autre : on le dessine une seule fois
+   dans un canevas hors écran, puis on le recopie. Seule la rougeur due à la
+   flamme est repassée par-dessus, et uniquement pendant la fixation.        */
+const slideC=document.createElement("canvas"); slideC.width=CW; slideC.height=CH;
+const slctx=slideC.getContext("2d");
+let slideBaked=false;
+
+function drawSlide(g){
+  if(!slideBaked){ slctx.clearRect(0,0,CW,CH); bakeSlide(slctx); slideBaked=true; }
+  g.drawImage(slideC,0,0);
+  if(flameOn>0.05){
+    for(let y=TOPY;y<=BOTY;y++){
+      const t=(y-TOPY)/(BOTY-TOPY);
+      const hw=Math.round(TOPH+(BOTH-TOPH)*t);
+      const gl=flameOn*(0.30+0.70*t);
+      for(let x=MIDX-hw;x<=MIDX+hw;x++)
+        if(nz(x*5,y*5)<gl*0.5)P1(g,x,y,gl>0.55?"#8a3a12":"#4a2410");
+    }
+  }
+}
+
+function bakeSlide(g){
+  const t0=TOPY, t1=BOTY;
+  for(let y=t0;y<=t1+5;y++){
+    const t=(y-t0)/(t1-t0);
+    const hw=Math.round(TOPH+(BOTH-TOPH)*clamp(t,0,1));
+    const x0=MIDX-hw, x1=MIDX+hw;
+    if(y>t1){                                     // tranche du verre, vue de face
+      PR(g,x0,y,x1-x0+1,1,y<t1+3?"#22323f":"#101a22");
+      continue;
+    }
+    for(let x=x0;x<=x1;x++){
+      P1(g,x,y,(x-x0<2||x1-x<2)?PAL.glassHi:((x+y)&1?PAL.glassMi:PAL.glassLo));
+    }
+    P1(g,x0,y,PAL.glassEdge); P1(g,x1,y,PAL.glassEdge);
+    P1(g,x0+1,y,PAL.glassHi); P1(g,x1-1,y,PAL.glassHi);
+  }
+  // arêtes haute et basse
+  const hwT=TOPH, hwB=BOTH;
+  PR(g,MIDX-hwT,t0,hwT*2+1,1,PAL.glassEdge);
+  PR(g,MIDX-hwB,t1,hwB*2+1,1,PAL.glassEdge);
+  // reflet oblique le long du bord gauche
+  for(let i=0;i<30;i++){
+    const y=t0+3+i, t=(y-t0)/(t1-t0);
+    const hw=TOPH+(BOTH-TOPH)*t;
+    const x=Math.round(MIDX-hw+4+i*0.32);
+    P1(g,x,y,"#bfeaf4"); P1(g,x+1,y,"#5f97ac");
+  }
+  // ombre portée sous la lame
+  for(let x=MIDX-BOTH+2;x<=MIDX+BOTH-2;x++)
+    if((x&1)===0)P1(g,x,t1+6,"#0d1319");
+}
+
+/* ---------- frottis ---------- */
+function drawSmear(g){
+  const [mx,my]=proj(SMX,SMY);
+  const hw=TOPH+(BOTH-TOPH)*(SMY/SH);
+  const rx=Math.round(SMRX/(SW/2)*hw), ry=Math.round(SMRY*(BOTY-TOPY)/SH);
+  const dry=clamp(heat/1.5,0,1);
+  const burn=clamp((heat-3.0)/2.6,0,1);
+  const film=shown.film;
+  const st=step(), onFlame=st&&st.kind==="flame";
+
+  for(let y=-ry;y<=ry;y++)for(let x=-rx;x<=rx;x++){
+    const nr=(x*x)/(rx*rx)+(y*y)/(ry*ry);
+    if(nr>1)continue;
+    const sx=Math.round(mx)+x, sy=Math.round(my)+y;
+    if(!onSlide(sx,sy))continue;
+    const h=nz(sx*3+7,sy*3+13), h2=nz(sx*11+1,sy*7+5), h3=nz(sx*17+5,sy*23+11);
+
+    // matière restante : épaisseur au centre, séchage, et lavage du frottis
+    let d=(1-nr*0.55)*(0.58+0.72*h)*film*(0.38+0.62*dry);
+    if(d<0.26)continue;
+
+    let pal, inten;
+    if(burn>0.30 && h2<burn*0.92){          // plages carbonisées et craquelées
+      pal=PAL.burn; inten=0.55+0.45*burn;
+      if(h2<burn*0.16)continue;             // craquelures : la matière a sauté
+    }else{
+      /* Le violet ne bascule pas d'un coup au rouge : chaque pixel tire au sort
+         son état selon le poids des deux colorants. Quand le complexe s'en va,
+         de plus en plus de pixels passent au rouge — la trace vire en fondu.  */
+      const wv=shown.vio, wr=shown.red;
+      const wf=clamp(1-Math.max(wv,wr)*1.55,0,1);
+      const tot=wv+wr+wf;
+      const pick=h3*tot;
+      if(pick<wv)          { pal=PAL.vio;  inten=d*(0.42+0.85*wv); }
+      else if(pick<wv+wr)  { pal=PAL.red;  inten=d*(0.42+0.85*wr); }
+      else                 { pal=PAL.film; inten=d; }
+    }
+    P1(g,sx,sy, inten>0.92?pal[0] : inten>0.58?pal[1] : pal[2]);
+  }
+
+  // gouttes d'inoculum qui s'évaporent sur la flamme
+  if(onFlame && dry<0.99){
+    for(const dp of DROPS){
+      const sc=(1-dry)*dp.s;
+      if(sc<=0.05)continue;
+      const cxp=Math.round(mx+dp.x*rx), cyp=Math.round(my+dp.y*ry);
+      const r=Math.max(1,Math.round(rx*0.34*sc));
+      for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++){
+        if((x*x)/(r*r)+(y*y)/(r*r*0.42)>1)continue;
+        const px=cxp+x, py=cyp+y;
+        if(!onSlide(px,py))continue;
+        P1(g,px,py, (x<0&&y<0&&nz(px,py)>0.45)?"#e8f6fa":"#8fb8c8");
+      }
+      P1(g,cxp-Math.round(r*0.4),cyp-1,"#ffffff");
+    }
+    // vapeur
+    if(flameOn>0.15){
+      const fr=Math.floor(performance.now()/90);
+      for(let i=0;i<9;i++){
+        const ph=((fr+i*7)%46)/46;
+        const px=Math.round(mx+Math.sin(i*2.3+ph*4)*rx*0.7);
+        const py=Math.round(my-2-ph*26);
+        if(nz(i*13,fr+i)<0.35)continue;
+        P1(g,px,py, ph<0.5?PAL.steam[0]:PAL.steam[1]);
+      }
+    }
+  }
+}
+
+/* ---------- fluide : rastérisation en pixels ---------- */
+const FX0=MIDX-BOTH-3, FY0=TOPY-3, FW=(BOTH+3)*2+2, FH=(BOTY-TOPY)+22;
+const dens=new Float32Array(FW*FH);
+function drawFluid(g){
+  const s=step();
+  if(!s||s.kind!=="liquid"||!P.length)return;
+  dens.fill(0);
+  for(const p of P){
+    const t=p.y/SH;
+    const hw=TOPH+(BOTH-TOPH)*t;
+    const sx=MIDX+(p.x/SW-0.5)*2*hw, sy=TOPY+(BOTY-TOPY)*t;
+    const gx=Math.round(sx-FX0), gy=Math.round(sy-FY0);
+    for(let dy=-3;dy<=3;dy++){
+      const yy=gy+dy; if(yy<0||yy>=FH)continue;
+      const row=yy*FW;
+      for(let dx=-3;dx<=3;dx++){
+        const xx=gx+dx; if(xx<0||xx>=FW)continue;
+        const d2=dx*dx+dy*dy; if(d2>10)continue;
+        dens[row+xx]+=1-Math.sqrt(d2)/3.4;
+      }
+    }
+  }
+  const pal=s.pal;
+  for(let y=0;y<FH;y++){
+    const row=y*FW, rowUp=(y-2)*FW;
+    for(let x=0;x<FW;x++){
+      const v=dens[row+x];
+      if(v<0.42)continue;
+      const sx=FX0+x, sy=FY0+y;
+      if(!onSlide(sx,sy))continue;
+      const above = y>=2 ? dens[rowUp+x] : 0;
+      let c;
+      if(above<0.42)            c=pal[2];      // crête du liquide : reflet vif
+      else if(v>1.85){
+        // le réactif est translucide : un pixel sur huit laisse voir le frottis
+        if(((sx*3+sy*5)&3)===0)continue;   // 1 pixel sur 4
+        c=pal[0];
+      }
+      else if(v>1.00)           c=pal[1];
+      else c=((sx+sy)&1)?pal[1]:pal[0];        // bord tramé
+      P1(g,sx,sy,c);
+    }
+  }
+}
+
+/* ---------- filet de versement et flacon ---------- */
+function drawStream(g){
+  const s=step();
+  if(!s||s.kind!=="liquid"||!held)return;
+  const pal=s.pal;
+  const y0=30, [bx,by]=proj(SMX,SMY-30);
+  const fr=Math.floor(performance.now()/45);
+  for(let y=y0;y<by;y++){
+    const t=(y-y0)/(by-y0);
+    const x=Math.round(lerp(MIDX,bx,t)+Math.sin((y+fr)*0.42)*1.2*(1-t));
+    const w=t>0.75?3:2;
+    PR(g,x-(w>>1),y,w,1,((y+fr)&3)?pal[1]:pal[2]);
+    if(w>2)P1(g,x-1,y,pal[2]);
+  }
+  // éclaboussures à l'impact
+  for(let i=0;i<4;i++){
+    if(nz(i*29,fr)<0.5)continue;
+    P1(g,Math.round(bx)+((i%2)?1:-1)*(2+((fr+i)%4)), Math.round(by)-((fr+i*3)%4), pal[2]);
+  }
+}
+
+function drawBottle(g){
+  const s=step();
+  if(!s||s.kind!=="liquid")return;
+  const pal=s.pal;
+  const bx=MIDX-9, by=6, tilt=held?2:0;
+  PR(g,bx+3-tilt,by,7,3,"#2f3d49");           // bouchon
+  PR(g,bx,by+3,16,20,"#1a2530");              // corps
+  PR(g,bx+2,by+7,12,14,pal[1]);               // contenu
+  PR(g,bx+2,by+7,3,14,pal[2]);                // reflet vertical
+  PR(g,bx+2,by+7,12,2,pal[0]);                // ligne de flottaison
+  PR(g,bx,by+3,1,20,"#5f8ea4"); PR(g,bx+15,by+3,1,20,"#5f8ea4");
+  PR(g,bx,by+3,16,1,"#5f8ea4"); PR(g,bx,by+22,16,1,"#5f8ea4");
+  PR(g,bx+6-tilt,by+23,4,4,"#243039");        // bec
+  if(held)PR(g,bx+7-tilt,by+26,2,2,pal[2]);
+}
+
+/* ---------- bec Bunsen ---------- */
+function drawFlame(g){
+  const s=step();
+  if(!s||s.kind!=="flame")return;
+  const fx=MIDX, fy=BOTY+22;
+  PR(g,fx-3,fy+4,7,20,"#1b242c");             // cheminée
+  PR(g,fx-3,fy+4,1,20,"#33434f");
+  PR(g,fx-9,fy+24,19,4,"#2a3742");
+  const fr=Math.floor(performance.now()/70);
+  const inten=0.35+0.65*flameOn;
+  for(let y=0;y<Math.round(30*inten);y++){
+    const up=y/(30*inten);
+    const w=Math.max(1,Math.round((6-up*4.2)*inten+Math.sin((fr+y)*0.5)*0.6));
+    for(let x=-w;x<=w;x++){
+      const e=Math.abs(x)/(w+0.001);
+      if(nz(x*7+fr,y*13)<up*0.35)continue;
+      const c = up>0.72 ? "#ff9a2e" : e>0.62 ? "#ff7a18" : up<0.30 ? "#5aa8ff" : "#ffeaa8";
+      P1(g,fx+x,fy-y,c);
+    }
+  }
+  // halo
+  if(flameOn>0.3)for(let i=0;i<10;i++){
+    const ax=fx+Math.round(Math.sin(i*2.7+fr*0.2)*9);
+    const ay=fy-30-((fr+i*5)%14);
+    if(nz(i*19,fr)<0.55)continue;
+    P1(g,ax,ay,"#7a3a12");
+  }
+}
+
+/* ---------- boucle de rendu ---------- */
+function render(dt){
+  const g=ctx;
+  PR(g,0,0,CW,CH,"#07090d");
+  // ambiance : trame teal très diffuse
+  for(let y=0;y<CH;y+=4)for(let x=(y>>2)&3;x<CW;x+=4)
+    if(nz(x,y)>0.86)P1(g,x,y,"#0d1c22");
+
+  if(phase==="micro"||phase==="call"||phase==="score"){ drawMicroscope(g); return; }
+
+  const sh=slideShake>0.05?(nz(Math.floor(performance.now()/60),1)<0.5?-1:1):0;
+  g.save(); g.translate(sh,0);
+  drawFlame(g);
+  drawSlide(g);
+  drawSmear(g);
+  drawStream(g);
+  drawFluid(g);
+  g.restore();
+  drawBottle(g);
+}
+
+/* ---------- champ microscopique, cuit une fois puis affiché ---------- */
+const microC=document.createElement("canvas"); microC.width=CW; microC.height=CH;
+const mctx=microC.getContext("2d");
+const SCOPE={cx:80, cy:80, rad:58};
+let microReady=false;
+
+function bakeField(R){
+  const g=mctx;
+  g.clearRect(0,0,CW,CH);
+  const {cx,cy,rad}=SCOPE;
+  // fond de champ tramé, légèrement voilé par la contre-coloration
+  for(let y=cy-rad;y<=cy+rad;y++)for(let x=cx-rad;x<=cx+rad;x++){
+    const d2=(x-cx)*(x-cx)+(y-cy)*(y-cy);
+    if(d2>rad*rad)continue;
+    const v=nz(x*3,y*3), fall=d2/(rad*rad);
+    let c = fall>0.80 ? PAL.scope[3] : fall>0.55 ? PAL.scope[2] : v>0.62 ? PAL.scope[0] : PAL.scope[1];
+    if(R.red>0.25 && nz(x*7+3,y*5+9) < R.red*0.30) c = fall>0.6?"#c9a79c":"#e2c3ba";
+    P1(g,x,y,c);
+  }
+  for(const d of debris) pxDebris(g,d,R);
+  for(const c of field)  pxCell(g,c,R);
+  microReady=true;
+}
+
+function pxDebris(g,d,R){
+  const {cx,cy,rad}=SCOPE;
+  const x=Math.round(cx+d.x*rad*0.88), y=Math.round(cy+d.y*rad*0.88);
+  const col = d.kind==="burn" ? "#3d2510" : d.kind==="crystal" ? "#7b4fd0" : "#b0a596";
+  for(let i=0;i<d.n;i++){
+    const px=x+((nz(d.s+i, 3)*5)|0)-2, py=y+((nz(d.s+i, 9)*5)|0)-2;
+    if((px-cx)**2+(py-cy)**2>rad*rad)continue;
+    P1(g,px,py,col);
+  }
+}
+
+function pxCell(g,c,R){
+  const o=ORG, {cx,cy,rad}=SCOPE;
+  const x=Math.round(cx+c.x*rad*0.86), y=Math.round(cy+c.y*rad*0.86);
+  const t50=o.t50*(0.20+0.80*R.mord)*c.k;
+  const eff=1/(1+Math.exp(-(R.eth-t50)/o.slope));
+  const vio=R.cvU*R.mord*(1-eff);
+  const red=counterstain(R.safU,vio);
+
+  let pal, inten;
+  if(c.br){ pal=PAL.burn; inten=1; }
+  else if(vio>0.14){ pal=PAL.vio; inten=vio; }
+  else if(red>0.10){ pal=PAL.red; inten=red; }
+  else { pal=["#b4a99b","#968c80","#6f675d"]; inten=0.25; }
+
+  const W=o.pw*c.s, L=o.pl*c.s;
+  const half=Math.max((L-W)/2,0), r=W/2;
+  const ca=Math.cos(c.ang), sa=Math.sin(c.ang);
+  const bb=Math.ceil(L/2)+1;
+
+  for(let dy=-bb;dy<=bb;dy++)for(let dx=-bb;dx<=bb;dx++){
+    const lx= dx*ca+dy*sa, ly=-dx*sa+dy*ca;
+    const ax=Math.max(Math.abs(lx)-half,0);
+    const dd=ax*ax+ly*ly;
+    if(dd>r*r)continue;
+    const px=x+dx, py=y+dy;
+    if((px-cx)**2+(py-cy)**2>rad*rad)continue;
+    const edge = dd>(r-0.9)*(r-0.9);
+    if(c.gh){ if(!edge)continue; P1(g,px,py,pal[2]); continue; }   // fantôme : contour seul
+    if(c.br && nz(px*5,py*5)<0.22)continue;                        // débris carbonisé, éclaté
+    let idx = edge?1:0;
+    if(inten<0.45)idx=Math.min(idx+1,2);
+    if(!edge && !c.br && nz(px*9+1,py*9+3)>0.80)idx=0;             // relief interne
+    P1(g,px,py,pal[idx]);
+  }
+}
+
+function drawMicroscope(g){
+  if(!microReady && result) bakeField(result.R);
+  const {cx,cy,rad}=SCOPE;
+  const off = phase==="call" ? -8 : 0;
+  g.drawImage(microC,0,off);
+  // monture pixel
+  const cyo=cy+off;
+  for(let a=0;a<360;a+=1){
+    const rr=a*Math.PI/180;
+    for(let k=0;k<4;k++){
+      P1(g,Math.round(cx+Math.cos(rr)*(rad+1+k)),Math.round(cyo+Math.sin(rr)*(rad+1+k)),k<1?"#00AAB6":"#16222c");
+    }
+  }
+  // échelle
+  const by=cyo+rad+9;
+  PR(g,cx-26,by-5,52,10,"#0b1219");
+  PR(g,cx-22,by,20,2,"#FFDD00");
+  g.fillStyle="#cfe3e6"; g.font="7px monospace";
+  g.fillText("10 um",cx+2,by+3);
+  g.fillStyle="#6d8592"; g.font="7px monospace";
+  g.fillText("x1000",cx-14,cyo-rad-4);
+}
+
+/* -------------------------------------------------- HUD */
+const stepName=document.getElementById("stepName"), stepTime=document.getElementById("stepTime");
+const timeFill=document.getElementById("timeFill"), zoneEl=document.getElementById("zoneEl");
+const timeTrack=document.getElementById("timeTrack");
+const needleEl=document.getElementById("needleEl");
+const covVal=document.getElementById("covVal"), covFill=document.getElementById("covFill");
+const hintEl=document.getElementById("hint");
+
+function updateHUD(){
+  const s=step(); if(!s)return;
+  const isFlame=s.kind==="flame";
+  const t=isFlame?heat:acc[s.id];
+  const full=isFlame?5:s.target*2.2;
+  stepName.textContent=(si+1)+"/"+STEPS.length+" · "+T(s.key);
+  stepTime.innerHTML=t.toFixed(1)+' <small>'+(isFlame?"s":"s sim.")+'</small>';
+  const pct=clamp(t/full*100,0,100);
+  timeFill.style.width=pct+"%";
+  const good=Math.abs(t-s.target)<=s.tol;
+  timeFill.style.background = good?"var(--good)": (t>s.target?"var(--bad)":"var(--teal)");
+  if(MODE==="learn"){
+    zoneEl.classList.remove("hidden"); needleEl.classList.remove("hidden");
+    const l=clamp((s.target-s.tol)/full*100,0,100), r=clamp((s.target+s.tol)/full*100,0,100);
+    zoneEl.style.left=l+"%"; zoneEl.style.width=Math.max(r-l,1)+"%";
+    needleEl.style.left=clamp(s.target/full*100,0,100)+"%";
+  }else{
+    // en examen il ne reste que le chiffre : aucune jauge, aucun repère de couleur
+    zoneEl.classList.add("hidden"); needleEl.classList.add("hidden");
+  }
+  timeTrack.style.visibility = MODE==="learn" ? "visible" : "hidden";
+  covVal.innerHTML=Math.round(cov*100)+"<small>%</small>";
+  covFill.style.width=(cov*100)+"%";
+  covFill.style.background = cov>=0.6?"var(--good)":"var(--yellow)";
+  hintEl.classList.toggle("hidden", held || phase!=="play");
+}
+
+/* -------------------------------------------------- toast */
+let tt=null; const toastEl=document.getElementById("toast");
+function toast(m){
+  toastEl.textContent=m; toastEl.classList.add("show");
+  clearTimeout(tt); tt=setTimeout(()=>toastEl.classList.remove("show"),1000);
+}
+
+/* -------------------------------------------------- écrans */
+const ovMenu=document.getElementById("ovMenu"), ovBrief=document.getElementById("ovBrief"),
+      ovCall=document.getElementById("ovCall"), ovScore=document.getElementById("ovScore"),
+      ovCodex=document.getElementById("ovCodex");
+const ALL=[ovMenu,ovBrief,ovCall,ovScore,ovCodex];
+function show(el){ ALL.forEach(o=>o.classList.add("hidden")); if(el)el.classList.remove("hidden"); }
+
+function buildMenu(){
+  const gEl=document.getElementById("orgGrid"); gEl.innerHTML="";
+  ORGS.forEach(o=>{
+    const b=document.createElement("button");
+    b.className="chip";
+    const dot=o.gram>0?"#7b4fd0":"#e0554f";
+    b.innerHTML=`<div class="n"><span class="dot" style="background:${dot}"></span><i>${o.name}</i></div>
+      <div class="d">${o.tag[LANG]}${o.variable?" · Gram variable":""}</div>`;
+    b.onclick=()=>{ORG=o;unknown=false;openBrief();};
+    gEl.appendChild(b);
+  });
+  const u=document.createElement("button");
+  u.className="chip wide";
+  u.innerHTML=`<div class="n"><span class="dot" style="background:#FFDD00"></span>${T("unknown_name")}</div>
+    <div class="d">${T("unknown_tag")}</div>`;
+  u.onclick=()=>{ORG=ORGS[Math.floor(Math.random()*ORGS.length)];unknown=true;openBrief();};
+  gEl.appendChild(u);
+}
+
+function protoHTML(){
+  return STEPS.map((s,i)=>{
+    const tgt = s.kind==="flame" ? s.target.toFixed(1)+" s" : s.target+" s";
+    const crit = s.id==="eth";
+    return `<div>${crit?'<span class="crit">':''}<b>${i+1}.</b> ${T(s.key)} — ${tgt}${crit?" ◀":""}${crit?'</span>':''}</div>`;
+  }).join("");
+}
+
+function openBrief(){
+  document.getElementById("brTitle").textContent = unknown ? T("unknown_name") : ORG.name.toUpperCase();
+  document.getElementById("brSub").textContent   = unknown ? T("unknown_adv") : ORG.note[LANG];
+  document.getElementById("brProto").innerHTML   = protoHTML();
+  phase="brief"; show(ovBrief);
+}
+
+function startRun(){
+  resetRun(); phase="play"; show(null);
+  document.getElementById("nextBtn").disabled=false;
+  updateHUD();
+}
+
+function showScore(){
+  const G=grade(), R=result.R, S=result.steps;
+  const gE=document.getElementById("scGrade");
+  gE.textContent=G.g;
+  gE.style.color=G.g==="S"?"#FFDD00":G.g==="A"?"#00AAB6":G.g==="B"?"#8fd66b":G.g==="C"?"#e8a33d":"#ff5a63";
+  document.getElementById("scPts").textContent=G.total+" / 100";
+  const readTxt = R.read>0?T("read_pos"):R.read<0?T("read_neg"):T("read_none");
+  const truthTxt = ORG.gram>0?T("read_pos"):T("read_neg");
+  document.getElementById("scOrg").innerHTML=
+    `<i>${ORG.name}</i> · ${T("truth")} <b style="color:${ORG.gram>0?'#b79aef':'#f09a95'}">${truthTxt}</b>`;
+  document.getElementById("scVerdict").textContent=T(G.v);
+
+  const rows=[
+    [T("r_fix"),    S.fix.sc,    S.fix.t.toFixed(1)+" s / 2.0"],
+    [T("r_cv"),     S.cv.sc,     Math.round(S.cv.t)+" s / 30"],
+    [T("r_iodine"), S.iodine.sc, Math.round(S.iodine.t)+" s / 30"],
+    [T("r_eth"),    S.eth.sc,    Math.round(R.eth)+" s / 20"],
+    [T("r_saf"),    S.saf.sc,    Math.round(S.saf.t)+" s / 60"],
+    [T("r_rinse"),  (S.rin1.sc+S.rin2.sc+S.rin3.sc)/3, Math.round(R.rinseTot)+" s"],
+    [T("r_read"),   G.lecture,   readTxt]
+  ];
+  document.getElementById("scRows").innerHTML=rows.map(([l,v,x])=>`
+    <div class="row"><div class="top"><span class="rl">${l}</span><span class="rv">${x}</span></div>
+    <div class="rtrack"><div class="rfill" style="width:${clamp(v,0,100)}%;background:${v>70?"#00AAB6":v>40?"#e8a33d":"#ff5a63"}"></div></div></div>`).join("");
+  document.getElementById("scNote").innerHTML =
+    G.notes.map(n=>"› "+T(n)).join("<br><br>") + (G.notes.length?"<br><br>":"") +
+    '<span style="opacity:.6">'+T("disc")+"</span>";
+  phase="score"; show(ovScore);
+}
+
+/* -------------------------------------------------- codex */
+const CODEX=[
+ {k:"cx1", tgt:"~2 s",
+  fr:["Le frottis et la fixation",
+      "Une goutte de suspension est étalée puis séchée, et la lame est passée doucement sur la flamme. La chaleur fait adhérer les cellules au verre : sans elle, tout part au premier rinçage. Trop de chaleur et les cellules se rétractent, se déforment et se carbonisent : les morphologies, qui sont l'autre information que donne un Gram, deviennent illisibles."],
+  en:["The smear and heat fixation",
+      "A drop of suspension is spread, dried, then passed gently through a flame. Heat bonds the cells to the glass; without it everything washes off at the first rinse. Too much heat and cells shrink, distort and char, destroying the morphology that a Gram stain is also meant to reveal."]},
+
+ {k:"cx2", tgt:"30 s",
+  fr:["Cristal violet",
+      "Colorant basique dont le cation entre librement dans toutes les bactéries, Gram positives comme Gram négatives. À la fin de cette étape, la lame entière est violette et ne distingue encore rien : c'est un point que l'on oublie souvent. Toute la sélectivité viendra des deux étapes suivantes."],
+  en:["Crystal violet",
+      "A basic dye whose cation enters every bacterium freely, Gram positive and Gram negative alike. At the end of this step the whole slide is purple and distinguishes nothing — a point often forgotten. All the selectivity comes from the next two steps."]},
+
+ {k:"cx3", tgt:"30 s",
+  fr:["Lugol, le mordant",
+      "L'ion iodure échange avec le chlorure du cristal violet et forme un complexe peu soluble qui précipite dans le cytoplasme. C'est ce précipité, trop gros pour ressortir facilement, qui va être piégé ou non selon la paroi. Sans mordant suffisant, le colorant reste soluble et s'échappe à l'alcool même chez une Gram positive : toute la lame vire au rose."],
+  en:["Gram's iodine, the mordant",
+      "Iodide exchanges with the chloride of crystal violet and forms a poorly soluble complex that precipitates in the cytoplasm. It is this precipitate, too bulky to leave easily, that the wall will trap or not. Without enough mordant the dye stays soluble and escapes in alcohol even in a Gram positive: the whole slide turns pink."]},
+
+ {k:"cx4", tgt:"20 s",
+  fr:["Décoloration à l'éthanol — l'étape critique",
+      "C'est de loin l'étape la plus agressive, et la seule qui trie. Chez les Gram négatives, la membrane externe lipidique est dissoute par l'alcool et le peptidoglycane, épais de une à trois couches seulement, ne retient pas le précipité : beaucoup de cellules lysent et il ne reste souvent que des fantômes. Chez les Gram positives, la paroi épaisse et peu perméable emprisonne le complexe. Le paramètre décisif n'est donc pas la nature du colorant mais la durée : quelques secondes de trop et une Gram positive se lit Gram négative."],
+  en:["Ethanol decolorization — the critical step",
+      "By far the most damaging step, and the only one that sorts. In Gram negatives the lipid outer membrane is dissolved by alcohol and the peptidoglycan, only one to three layers thick, cannot hold the precipitate: many cells lyse and often only ghosts remain. In Gram positives the thick, poorly permeable wall traps the complex. The decisive parameter is not the dye but the duration: a few seconds too long and a Gram positive reads as Gram negative."]},
+
+ {k:"cx5", tgt:"60 s",
+  fr:["Contre-coloration à la fuchsine",
+      "La fuchsine de Ziehl, ou la safranine, colore en rouge tout ce qui a été vidé de son cristal violet. Elle ne se voit pas sur les cellules restées violettes. Une contre-coloration trop brève laisse les Gram négatives quasi invisibles sur le fond, et l'on conclut à tort à un champ vide."],
+  en:["Counterstaining with carbol fuchsin",
+      "Carbol fuchsin, or safranin, stains red everything that was emptied of crystal violet. It is invisible on cells that stayed purple. Too brief a counterstain leaves Gram negatives almost invisible against the background, and the field is wrongly called empty."]},
+
+ {k:"cx6", tgt:null,
+  fr:["Les parois, de part et d'autre",
+      "Une paroi Gram positive comme celle de Staphylococcus aureus mesure environ 25 nm et empile de nombreuses couches de peptidoglycane liées entre elles dans les trois dimensions, complétées d'acides teichoïques : c'est une enveloppe robuste et peu perméable. Une paroi Gram négative n'a qu'une à trois couches de peptidoglycane, doublées à l'extérieur d'une bicouche lipide-protéine contenant les porines et le lipopolysaccharide. Elle est nettement moins résistante, et c'est cette fragilité que la décoloration exploite."],
+  en:["Two kinds of wall",
+      "A Gram-positive wall such as that of Staphylococcus aureus is about 25 nm thick and stacks many peptidoglycan layers cross-linked in three dimensions, plus teichoic acids: a robust, poorly permeable envelope. A Gram-negative wall has only one to three peptidoglycan layers, backed on the outside by a lipid-protein bilayer carrying porins and lipopolysaccharide. It is far less resistant, and decolorization exploits that weakness."]},
+
+ {k:"cx7", tgt:null,
+  fr:["Gram variable : quand le protocole ne suffit plus",
+      "Certaines Gram positives en croissance rapide solubilisent plus de paroi à l'extérieur qu'elles n'en fabriquent à l'intérieur. La paroi s'amincit, la cellule devient sensible au traumatisme de la coloration et lyse : elle se lit Gram négative. C'est fréquent chez Bacillus, dont B. cereus, et chez Clostridium. Autre cas, le groupe Actinomyces, Corynebacterium, Mycobacterium et Propionibacterium, dont la paroi devient fragile à la jonction du septum de division : la cellule s'y rompt et laisse échapper son contenu."],
+  en:["Gram variable: when the protocol is not enough",
+      "Some fast-growing Gram positives dissolve more wall on the outside than they build on the inside. The wall thins, the cell becomes sensitive to the trauma of staining and lyses: it reads Gram negative. This is common in Bacillus, B. cereus included, and in Clostridium. Another case is the Actinomyces, Corynebacterium, Mycobacterium and Propionibacterium group, whose wall becomes fragile at the dividing septum, where the cell blows out and releases its contents."]},
+
+ {k:"cx8", tgt:null,
+  fr:["Les limites du Gram",
+      "Chez les archées, la diversité chimique et structurale des enveloppes est telle que la réponse au Gram ne veut plus dire grand-chose sur le plan taxonomique : certaines réagissent comme des Gram positives, d'autres lysent immédiatement. Le Gram reste malgré tout un outil de première intention indispensable, et la réponse à la coloration est toujours exigée dans la description d'une espèce nouvelle."],
+  en:["Limits of the Gram stain",
+      "In archaea, envelope chemistry and structure vary so widely that the Gram response says little taxonomically: some react like Gram positives, others lyse immediately. The Gram stain nevertheless remains an indispensable first-line tool, and the staining response is still required when describing a new species."]}
+];
+function buildCodex(){
+  document.getElementById("cxBody").innerHTML=CODEX.map(e=>{
+    const [h,p]=e[LANG];
+    return `<div class="cx-entry"><h4>${h}</h4><p>${p}</p>${e.tgt?`<span class="tgt">${T("lbl_target")} · ${e.tgt}</span>`:""}</div>`;
+  }).join("");
+  document.getElementById("cxRef").textContent=T("cx_ref");
+}
+let codexBack="menu";
+function openCodex(){
+  codexBack=phase; buildCodex();
+  if(phase==="play")held=false;
+  phase="codex"; show(ovCodex);
+}
+function closeCodex(){
+  if(codexBack==="play"){phase="play";show(null);}
+  else if(codexBack==="score"){phase="score";show(ovScore);}
+  else if(codexBack==="brief"){phase="brief";show(ovBrief);}
+  else{phase="menu";show(ovMenu);}
+}
+
+/* -------------------------------------------------- câblage */
+document.getElementById("brGo").onclick=startRun;
+document.getElementById("brBack").onclick=()=>{phase="menu";show(ovMenu);};
+document.getElementById("nextBtn").onclick=nextStep;
+document.getElementById("callPos").onclick=()=>{call=+1;showScore();};
+document.getElementById("callNeg").onclick=()=>{call=-1;showScore();};
+document.getElementById("scRetry").onclick=()=>{if(unknown)ORG=ORGS[Math.floor(Math.random()*ORGS.length)];startRun();};
+document.getElementById("scMenu").onclick=()=>{resetRun();phase="menu";buildMenu();show(ovMenu);};
+document.getElementById("scCodex").onclick=openCodex;
+document.getElementById("cxBtn").onclick=()=>{ if(phase==="codex")closeCodex(); else openCodex(); };
+document.getElementById("cxClose").onclick=closeCodex;
+
+const mLearn=document.getElementById("mLearn"), mExam=document.getElementById("mExam");
+function setMode(m){
+  MODE=m;
+  mLearn.classList.toggle("on",m==="learn");
+  mExam.classList.toggle("on",m==="exam");
+  document.getElementById("modeDesc").textContent=T(m==="learn"?"mode_learn_d":"mode_exam_d");
+}
+mLearn.onclick=()=>setMode("learn");
+mExam.onclick=()=>setMode("exam");
+
+document.getElementById("langBtn").onclick=()=>{
+  LANG=LANG==="fr"?"en":"fr";
+  try{localStorage.setItem("mbg_lang",LANG);}catch(e){}
+  document.getElementById("langBtn").textContent=LANG==="fr"?"EN":"FR";
+  document.documentElement.lang=LANG;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{el.textContent=T(el.dataset.i18n);});
+  setMode(MODE); buildMenu();
+  if(phase==="brief")openBrief();
+  if(phase==="codex")buildCodex();
+  if(phase==="score")showScore();
+  updateHUD();
+};
+
+/* init */
+document.getElementById("langBtn").textContent=LANG==="fr"?"EN":"FR";
+document.documentElement.lang=LANG;
+document.querySelectorAll("[data-i18n]").forEach(el=>{el.textContent=T(el.dataset.i18n);});
+resetRun(); setMode("learn"); buildMenu(); show(ovMenu); updateHUD();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

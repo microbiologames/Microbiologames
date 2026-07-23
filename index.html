@@ -111,6 +111,10 @@
         border-color: #d8b45f;
         box-shadow: 6px 6px 0 #000, 0 0 18px rgba(216,180,95,0.40);
     }
+    .game-card.perfect:hover {
+        border-color: #7b4fd0;
+        box-shadow: 6px 6px 0 #000, 0 0 18px rgba(123, 79, 208, 0.40);
+    }
 
     /* Écran d'aperçu façon canvas de jeu */
     .screen {
@@ -260,6 +264,15 @@
         color: #d8b45f;
     }
     .rs-label .hi { color: var(--jaune); }
+
+    /* ===================================================================== */
+    /* VIGNETTE 6 — PERFECT GRAM : bactéries violettes et roses flottantes   */
+    /* ===================================================================== */
+    .pg-screen { background: #07090d; border-bottom: 3px solid #7b4fd0; }
+    .pg-bac { position: absolute; opacity: 0.9; }
+    .pg-bac.gram-pos { width: 12px; height: 12px; border-radius: 50%; background: #7b4fd0; box-shadow: 0 0 6px rgba(123,79,208,0.6); animation: pg-float 3s ease-in-out infinite; }
+    .pg-bac.gram-neg { width: 18px; height: 9px; border-radius: 4px; background: #e0554f; box-shadow: 0 0 6px rgba(224,85,79,0.6); animation: pg-float 3.5s ease-in-out infinite reverse; }
+    @keyframes pg-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
     /* ===================================================================== */
     /* VIGNETTE 3 — MICROBIO PAINT : colonies peintes sur une matrice qui      */
@@ -571,7 +584,27 @@
             </div>
         </a>
 
-        <!-- JEU 6... : colle ici un nouveau bloc <a class="game-card"> -->
+        <!-- ============================================================= -->
+        <!-- JEU 6 — PERFECT GRAM                                           -->
+        <!-- ============================================================= -->
+        <a class="game-card perfect" href="./perfect-gram.html">
+            <div class="screen pg-screen">
+                <div class="plat-badge" data-i18n-title="plat_mobile" title=""><svg class="ico-phone" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" aria-hidden="true"><path d="M3 0h10v16H3z" fill="#FFDD00"/><path d="M4 2h8v11H4z" fill="#243448"/><path d="M5 4h6v1H5z" fill="#fff3a8"/><path d="M5 6h6v1H5z" fill="#fff3a8"/><path d="M5 8h4v1H5z" fill="#00AAB6"/><path d="M6 14h4v1H6z" fill="#c9a800"/></svg></div>
+                <!-- Bactéries Gram+ et Gram- stylisées -->
+                <div class="pg-bac gram-pos" style="left:60px; top:40px; animation-delay: 0s;"></div>
+                <div class="pg-bac gram-pos" style="left:75px; top:55px; animation-delay: 0.5s;"></div>
+                <div class="pg-bac gram-neg" style="left:140px; top:70px; animation-delay: 1s;"></div>
+                <div class="pg-bac gram-neg" style="left:120px; top:90px; transform: rotate(45deg); animation-delay: 1.5s;"></div>
+            </div>
+            <div class="card-body">
+                <div class="card-title" data-i18n="title_gram">Perfect Gram</div>
+                <div class="card-version" data-i18n="v_gram">COLORATION · V1.0</div>
+                <div class="card-desc" data-i18n="d_gram">
+                    Maîtrise la coloration de Gram au doigt. Violet, lugol, alcool, fuchsine... Contrôle l'étape critique de décoloration pour réussir ton frottis !
+                </div>
+                <div class="play-btn" data-i18n="play_gram">▶ COLORER</div>
+            </div>
+        </a>
 
     </main>
 
@@ -600,17 +633,18 @@ const I18N = {
     tagline: "Des mini-jeux pour apprendre et expérimenter la microbiologie. Insérez une pièce.",
     title_biofilm: "Biofilm Simulator", title_fighter: "Microbes Fighter",
     title_paint: "Microbio Paint", title_echelle: "Échelle du Monde Microbien",
-    title_streak: "Rate My Streak",
+    title_streak: "Rate My Streak", title_gram: "Perfect Gram",
     v_biofilm: "ARCADE · V5.0", v_fighter: "VERSUS · V1.0",
     v_paint: "SANDBOX PRÉDICTIF · V1.0", v_echelle: "OUTIL PÉDAGOGIQUE · V1.0",
-    v_streak: "GESTE TECHNIQUE · V1.0",
+    v_streak: "GESTE TECHNIQUE · V1.0", v_gram: "COLORATION · V1.0",
     d_biofilm: "Colonise la canalisation : biofilm multi-espèces, matrice, quorum sensing, sporulation sous stress et survie aux nettoyages NEP. Clavier ou tactile.",
     d_fighter: "Duel en 2 manches : la bactérie « vicieuse » attaque à distance, le microbiologiste riposte avec les barrières (pH, aw, thermique). 1-2 joueurs ou CPU.",
     d_paint: "Peins Listeria et Salmonella sur une matrice alimentaire, règle température, pH et aw, puis simule croissance et traitement thermique. Courbe en direct.",
     d_echelle: "Du virus de la grippe au grain de sel : explore les micro-organismes à leur taille réelle, avec échelle et champ de vision. Données sourcées.",
     d_streak: "Trace ton isolement au doigt sur la gélose, puis regarde les colonies pousser en accéléré. L'anse part à 10⁹ UFC et s'épuise à chaque millimètre parcouru ; recroiser une strie en reprend la moitié.",
+    d_gram: "Maîtrise la coloration de Gram au doigt. Violet, lugol, alcool, fuchsine... Contrôle l'étape critique de décoloration pour réussir ton frottis !",
     play_biofilm: "▶ JOUER", play_fighter: "▶ COMBAT", play_paint: "▶ SIMULER", play_echelle: "▶ EXPLORER",
-    play_streak: "▶ ISOLER",
+    play_streak: "▶ ISOLER", play_gram: "▶ COLORER",
     plat_desktop: "Conseillé sur ordinateur", plat_mobile: "Conseillé sur smartphone",
     plat_both: "Ordinateur ou smartphone",
     leg_desktop: "ordinateur conseillé", leg_mobile: "smartphone conseillé", leg_both: "les deux",
@@ -622,17 +656,18 @@ const I18N = {
     tagline: "Mini games to learn and experiment meicrobiology. Insert a coin.",
     title_biofilm: "Biofilm Simulator", title_fighter: "Microbes Fighter",
     title_paint: "Microbio Paint", title_echelle: "Scale of the Microbial World",
-    title_streak: "Rate My Streak",
+    title_streak: "Rate My Streak", title_gram: "Perfect Gram",
     v_biofilm: "ARCADE · V5.0", v_fighter: "VERSUS · V1.0",
     v_paint: "PREDICTIVE SANDBOX · V1.0", v_echelle: "EDUCATIONAL TOOL · V1.0",
-    v_streak: "TECHNIQUE DRILL · V1.0",
+    v_streak: "TECHNIQUE DRILL · V1.0", v_gram: "STAINING · V1.0",
     d_biofilm: "Colonise the pipe: multi-species biofilm, matrix, quorum sensing, stress-induced sporulation and survival through CIP cleanings. Keyboard or touch.",
     d_fighter: "Best-of-three duel: the “vicious” bacterium attacks at range, the microbiologist strikes back with barriers (pH, aw, heat). 1-2 players or CPU.",
     d_paint: "Paint Listeria and Salmonella on a food matrix, set temperature, pH and aw, then simulate growth and heat treatment. Live growth curve.",
     d_echelle: "From the flu virus to a grain of salt: explore micro-organisms at their real size, with scale bar and field of view. Sourced data.",
     d_streak: "Draw your streak on the agar with a finger, then watch the colonies grow in fast-forward. The loop starts at 10⁹ CFU and empties with every millimetre travelled; re-crossing a streak takes half of what is there.",
+    d_gram: "Master the Gram stain with your finger. Crystal violet, iodine, alcohol, safranin... Don't mess up the critical decolorization step!",
     play_biofilm: "▶ PLAY", play_fighter: "▶ FIGHT", play_paint: "▶ SIMULATE", play_echelle: "▶ EXPLORE",
-    play_streak: "▶ ISOLATE",
+    play_streak: "▶ ISOLATE", play_gram: "▶ STAIN",
     plat_desktop: "Best on desktop", plat_mobile: "Best on a phone",
     plat_both: "Desktop or phone",
     leg_desktop: "desktop recommended", leg_mobile: "phone recommended", leg_both: "either one",
