@@ -16,6 +16,12 @@ et se joue sur https://microbiologames.github.io/Microbe-Fighter/. La carte de l
 ### Microbio Paint (V1.0) : tester simplement l'effet des facteurs sur la croissance des bactéries
 ### Échelle du monde microbien (V1.0) : apprécier les différences de taille entre les micro-organismes
 ### Rate my streak : tester sa compétence d'isolement
+### Cell Dungeon : roguelite d'arène au microscope, où la mise au point remplace le saut
+Vous êtes une cellule : vous tirez votre toxine, vous absorbez les acides aminés de vos
+victimes et vous leur volez leurs gènes. Quatre souches jouables, quatre matrices, et une
+bande son entièrement synthétisée. Le jeu vit dans son propre dépôt,
+[microbiologames/Cell-dungeon](https://github.com/microbiologames/Cell-dungeon),
+et se joue sur https://microbiologames.github.io/Cell-dungeon/. La carte de l'accueil y renvoie.
 
 
 

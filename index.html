@@ -115,6 +115,10 @@
         border-color: #7b4fd0;
         box-shadow: 6px 6px 0 #000, 0 0 18px rgba(123, 79, 208, 0.40);
     }
+    .game-card.dungeon:hover {
+        border-color: #c9ff5a;
+        box-shadow: 6px 6px 0 #000, 0 0 18px rgba(201, 255, 90, 0.40);
+    }
 
     /* Écran d'aperçu façon canvas de jeu */
     .screen {
@@ -318,6 +322,58 @@
     .wm-crosshair::before { top: 11px; left: 0; width: 24px; height: 2px; }
     .wm-crosshair::after { top: 0; left: 11px; width: 2px; height: 24px; }
     @keyframes wm-brownian { 0% { margin-top: 0; margin-left: 0; } 100% { margin-top: 4px; margin-left: -5px; } }
+
+    /* ===================================================================== */
+    /* VIGNETTE 8 — CELL DUNGEON : l'arène au microscope, et l'axe Z         */
+    /* ===================================================================== */
+    .cd-screen { background: #02070a; border-bottom: 3px solid #7fbf16; }
+    .cd-svg { width: 100%; height: 100%; display: block; shape-rendering: crispEdges; }
+    .cd-svg text { font-family: 'Courier Prime', 'Courier New', monospace; shape-rendering: geometricPrecision; letter-spacing: 0.5px; }
+
+    /* Les flagelles sont la mémoire du cap récent : ils balaient en retard. */
+    .cd-flag { transform-box: fill-box; transform-origin: top center; animation: cd-sway 1.15s ease-in-out infinite; }
+    .cd-flag.f2 { animation-delay: -0.38s; }
+    .cd-flag.f3 { animation-delay: -0.76s; }
+    @keyframes cd-sway { 0%,100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
+
+    /* La goutte d'acide se diffuse en vol : concentrée et rapide au départ,
+       elle s'étale, ralentit, et frappe de plus en plus large et de moins
+       en moins fort. */
+    .cd-shot { transform-box: view-box; transform-origin: 0 0; animation: cd-shot 1.6s linear infinite; }
+    .cd-shot.s2 { animation-delay: -0.53s; }
+    .cd-shot.s3 { animation-delay: -1.07s; }
+    @keyframes cd-shot {
+        0%   { transform: translate(133px, 77px) scale(0.5);  opacity: 0; }
+        14%  { opacity: 1; }
+        70%  { opacity: 0.8; }
+        100% { transform: translate(164px, 102px) scale(2.4); opacity: 0; }
+    }
+
+    /* Hors du plan focal, en fond clair, un objet s'étale et FONCE le fond :
+       son halo est sombre, pas lumineux. Il se pique quand la mise au point
+       descend le chercher — d'où le même cycle de 6 s que la jauge Z. */
+    .cd-deep, .cd-sharp { transform-box: fill-box; transform-origin: center; }
+    .cd-deep { animation: cd-deep 6s ease-in-out infinite; }
+    @keyframes cd-deep { 0%,100% { transform: scale(1.35); opacity: .55; } 45%,55% { transform: scale(0.9); opacity: 0; } }
+    .cd-sharp { animation: cd-sharp 6s ease-in-out infinite; }
+    @keyframes cd-sharp { 0%,100% { opacity: 0; } 45%,55% { opacity: 1; } }
+
+    /* La jauge de profondeur : régler la mise au point, c'est choisir sa cible. */
+    .cd-cursor { animation: cd-focus 6s ease-in-out infinite; }
+    @keyframes cd-focus { 0%,100% { transform: translateY(0); } 50% { transform: translateY(64px); } }
+
+    .cd-drift { animation: cd-drift 5.5s ease-in-out infinite alternate; }
+    .cd-drift.d2 { animation-delay: -2.7s; }
+    .cd-drift.d3 { animation-delay: -1.3s; }
+    @keyframes cd-drift { 0% { transform: translate(0,0); } 100% { transform: translate(-6px, 5px); } }
+
+    /* Les jauges : on encaisse, puis on régénère ; les acides aminés montent
+       jusqu'à la carte d'évolution, et repartent de zéro. */
+    .cd-pv, .cd-aa { transform-box: fill-box; transform-origin: left center; }
+    .cd-pv { animation: cd-pv 6s linear infinite; }
+    @keyframes cd-pv { 0%,44% { transform: scaleX(1); } 49%,86% { transform: scaleX(0.58); } 96%,100% { transform: scaleX(1); } }
+    .cd-aa { animation: cd-aa 6s linear infinite; }
+    @keyframes cd-aa { 0% { transform: scaleX(0.12); } 88% { transform: scaleX(1); } 91%,100% { transform: scaleX(0.12); } }
 
     /* --- PIED DE PAGE --- */
     footer { margin-top: 44px; text-align: center; font-size: 0.75em; color: #55606e; line-height: 1.8; position: relative; z-index: 2; }
@@ -554,6 +610,117 @@
             </div>
         </a>
 
+        <!-- ============================================================= -->
+        <!-- JEU 8 — CELL DUNGEON (dépôt voisin, publié sur GitHub Pages)   -->
+        <!-- ============================================================= -->
+        <a class="game-card dungeon" href="https://microbiologames.github.io/Cell-dungeon/" target="_blank" rel="noopener">
+            <div class="screen cd-screen">
+                <div class="plat-badge" data-i18n-title="plat_both" title=""><svg class="ico-desk" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" aria-hidden="true"><path d="M0 2h16v10H0z" fill="#5fd0d8"/><path d="M2 4h12v6H2z" fill="#0d3038"/><path d="M3 5h6v1H3z" fill="#9ff0f6"/><path d="M3 7h8v1H3z" fill="#9ff0f6"/><path d="M3 8h4v1H3z" fill="#FFDD00"/><path d="M6 12h4v2H6z" fill="#3fb3bb"/><path d="M3 14h10v2H3z" fill="#5fd0d8"/></svg><svg class="ico-phone" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" aria-hidden="true"><path d="M3 0h10v16H3z" fill="#FFDD00"/><path d="M4 2h8v11H4z" fill="#243448"/><path d="M5 4h6v1H5z" fill="#fff3a8"/><path d="M5 6h6v1H5z" fill="#fff3a8"/><path d="M5 8h4v1H5z" fill="#00AAB6"/><path d="M6 14h4v1H6z" fill="#c9a800"/></svg></div>
+
+                <!-- Le champ de l'objectif, son pourtour noir, et le HUD qui
+                     vit dessus : c'est exactement le cadrage du jeu. -->
+                <svg class="cd-svg" viewBox="0 0 260 150" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                    <defs>
+                        <clipPath id="cdField"><circle cx="130" cy="70" r="61"/></clipPath>
+                        <filter id="cdBlur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3.2"/></filter>
+                    </defs>
+
+                    <rect x="0" y="0" width="260" height="150" fill="#02070a"/>
+
+                    <!-- Le lait cru est blanc : fond clair, organismes sombres. -->
+                    <circle cx="130" cy="70" r="61" fill="#e9e5d7"/>
+
+                    <g clip-path="url(#cdField)">
+                        <!-- Nuées de caséine et globules gras : c'est le lait. -->
+                        <ellipse cx="100" cy="34" rx="16" ry="10" fill="#cfc9b4" opacity=".45"/>
+                        <ellipse cx="158" cy="112" rx="18" ry="11" fill="#cfc9b4" opacity=".32"/>
+                        <circle cx="92"  cy="92"  r="6.5" fill="#fbf9ef" stroke="#8a8069" stroke-width="1"/>
+                        <circle cx="168" cy="32"  r="4.5" fill="#fbf9ef" stroke="#8a8069" stroke-width="1"/>
+                        <circle cx="118" cy="120" r="3.5" fill="#fbf9ef" stroke="#8a8069" stroke-width="1"/>
+                        <circle cx="145" cy="30"  r="1.6" fill="#6b6455" opacity=".5"/>
+                        <circle cx="86"  cy="58"  r="1.4" fill="#6b6455" opacity=".5"/>
+                        <circle cx="150" cy="124" r="1.4" fill="#6b6455" opacity=".5"/>
+
+                        <!-- Le pH n'est pas un compteur : c'est une carte. La
+                             zone arrosée d'acide lactique a viré. -->
+                        <circle cx="164" cy="102" r="25" fill="#7d9c0e" opacity=".12"/>
+
+                        <!-- Les mobs apparaissent HORS PLAN et dérivent vers
+                             vous. Hors du plan focal, en fond clair, l'objet
+                             s'étale et FONCE le fond : son halo est sombre.
+                             Il se pique quand la jauge Z descend le chercher. -->
+                        <g class="cd-deep" filter="url(#cdBlur)"><rect x="-10" y="-4.5" width="20" height="9" rx="4.5" fill="#6b6455" transform="translate(98 62) rotate(-22)"/></g>
+                        <rect class="cd-sharp" x="-9" y="-3.5" width="18" height="7" rx="3.5" fill="#1f6b7a" stroke="#0c3941" stroke-width="1" transform="translate(98 62) rotate(-22)"/>
+
+                        <!-- Flore neutre : un obstacle, pas une cible. -->
+                        <circle class="cd-drift d3" cx="110" cy="38" r="7" fill="#9a9486" stroke="#615c50" stroke-width="1"/>
+
+                        <!-- Hostiles : la forme porte l'espèce, la couleur la menace. -->
+                        <g class="cd-drift"><rect x="-8" y="-3" width="16" height="6" rx="3" fill="#1f6b7a" stroke="#0c3941" stroke-width="1" transform="translate(104 104) rotate(-30)"/></g>
+                        <g class="cd-drift d2"><rect x="-8" y="-3" width="16" height="6" rx="3" fill="#1f6b7a" stroke="#0c3941" stroke-width="1" transform="translate(176 78) rotate(18)"/></g>
+                        <circle class="cd-drift d3" cx="166" cy="52" r="4" fill="#c2621a" stroke="#6e320a" stroke-width="1"/>
+
+                        <!-- Le boss : l'amas de S. aureus, en grappe de raisin. -->
+                        <g class="cd-drift d2" fill="#b8322a" stroke="#631411" stroke-width="1">
+                            <circle cx="164" cy="102" r="4.5"/><circle cx="171" cy="104" r="4.5"/>
+                            <circle cx="157" cy="105" r="4.5"/><circle cx="167" cy="95"  r="4.5"/>
+                            <circle cx="159" cy="96"  r="4.5"/><circle cx="173" cy="97"  r="4.5"/>
+                            <circle cx="168" cy="110" r="4.5"/><circle cx="159" cy="112" r="4.5"/>
+                        </g>
+
+                        <!-- Le joueur : un bacille lactique, avec un axe, un
+                             halo de contraste de phase, et ses flagelles volés. -->
+                        <g transform="translate(128 70) rotate(-14)">
+                            <rect x="-7.5" y="-14.5" width="15" height="29" rx="7.5" fill="#ffffff" opacity=".62"/>
+                            <path class="cd-flag"    d="M0,12 C-3,17 3,21 -1,27"   fill="none" stroke="#2f9e5e" stroke-width="1.6"/>
+                            <path class="cd-flag f2" d="M-2,12 C-7,16 -5,22 -10,26" fill="none" stroke="#2f9e5e" stroke-width="1.6"/>
+                            <path class="cd-flag f3" d="M2,12 C7,16 5,22 10,26"     fill="none" stroke="#2f9e5e" stroke-width="1.6"/>
+                            <rect x="-5" y="-12" width="10" height="24" rx="5" fill="#2f9e5e" stroke="#14512f" stroke-width="1.4"/>
+                            <rect x="-3" y="-7" width="3" height="10" rx="1.5" fill="#b7f2ce" opacity=".85"/>
+                        </g>
+
+                        <!-- Le tir automatique vise le plus net et le plus proche. -->
+                        <g class="cd-shot"><circle r="3.2" fill="#7d9c0e" opacity=".85"/><circle r="1.4" fill="#d8ee7c"/></g>
+                        <g class="cd-shot s2"><circle r="3.2" fill="#7d9c0e" opacity=".85"/><circle r="1.4" fill="#d8ee7c"/></g>
+                        <g class="cd-shot s3"><circle r="3.2" fill="#7d9c0e" opacity=".85"/><circle r="1.4" fill="#d8ee7c"/></g>
+                    </g>
+
+                    <!-- Le ménisque de la goutte. -->
+                    <circle cx="130" cy="70" r="61" fill="none" stroke="#8d846a" stroke-width="2"/>
+
+                    <text x="130" y="23" text-anchor="middle" font-size="7" fill="#b8322a">S. AUREUS</text>
+
+                    <!-- Le HUD vit sur le noir du pourtour : ses couleurs sont
+                         les siennes, indépendantes de la matrice. -->
+                    <text x="8" y="22" font-size="11" fill="#cfe6d8">07:12</text>
+                    <text x="8" y="33" font-size="6.5" fill="#5d7a68" data-i18n="cd_matrix">LAIT CRU</text>
+                    <text x="8" y="49" font-size="6" fill="#5d7a68">PV</text>
+                    <rect x="8" y="52" width="44" height="5" fill="#13231b"/>
+                    <rect class="cd-pv" x="8" y="52" width="44" height="5" fill="#6affc8"/>
+                    <text x="8" y="69" font-size="6" fill="#5d7a68">AA</text>
+                    <rect x="8" y="72" width="44" height="5" fill="#2a1c0e"/>
+                    <rect class="cd-aa" x="8" y="72" width="44" height="5" fill="#ff9b3d"/>
+                    <text x="8" y="90" font-size="6.5" fill="#c9ff5a">PH 5.0</text>
+                    <text x="8" y="101" font-size="6.5" fill="#5d7a68" data-i18n="cd_wave">VAGUE 4</text>
+
+                    <!-- L'axe Z remplace la verticalité : dans un bouillon,
+                         il n'y a pas de gravité, donc pas de saut. -->
+                    <text x="240" y="44" text-anchor="middle" font-size="6" fill="#5d7a68">Z</text>
+                    <rect x="239" y="50" width="2" height="76" fill="#33480d"/>
+                    <rect x="236" y="50" width="8" height="1" fill="#4d6106"/>
+                    <rect x="236" y="87" width="8" height="1" fill="#4d6106"/>
+                    <rect x="236" y="125" width="8" height="1" fill="#4d6106"/>
+                    <rect class="cd-cursor" x="234" y="54" width="12" height="3" fill="#c9ff5a"/>
+                </svg>
+            </div>
+            <div class="card-body">
+                <div class="card-title" data-i18n="title_dungeon">Cell Dungeon</div>
+                <div class="card-version" data-i18n="v_dungeon">ROGUELITE · MAQUETTE JOUABLE</div>
+                <div class="card-desc" data-i18n="d_dungeon">Plonge dans l'arène au microscope : tire ta toxine, absorbe les acides aminés de tes victimes et vole-leur leurs gènes. La mise au point remplace le saut — tes dégâts suivent la netteté de la cible. 4 souches, 4 matrices, bande son générée.</div>
+                <div class="play-btn" data-i18n="play_dungeon">▶ MUTER ↗</div>
+            </div>
+        </a>
+
     </main>
 
     <div class="plat-legend">
@@ -582,11 +749,11 @@ const I18N = {
     title_biofilm: "Biofilm Simulator", title_fighter: "Microbe Fighter",
     title_paint: "Microbio Paint", title_echelle: "Échelle du Monde Microbien",
     title_streak: "Rate My Streak", title_gram: "Perfect Gram",
-    title_wetmount: "Wet Mount",
+    title_wetmount: "Wet Mount", title_dungeon: "Cell Dungeon",
     v_biofilm: "ARCADE · V5.0", v_fighter: "PIXEL FIGHTER · DUEL & ARÈNE",
     v_paint: "SANDBOX PRÉDICTIF · V1.0", v_echelle: "OUTIL PÉDAGOGIQUE · V1.0",
     v_streak: "GESTE TECHNIQUE · V1.0", v_gram: "COLORATION · V1.0",
-    v_wetmount: "OBSERVATION · V1.0",
+    v_wetmount: "OBSERVATION · V1.0", v_dungeon: "ROGUELITE · MAQUETTE JOUABLE",
     d_biofilm: "Colonise la canalisation : biofilm multi-espèces, matrice, quorum sensing, sporulation sous stress et survie aux nettoyages NEP. Clavier ou tactile.",
     d_fighter: "Combat pixel art façon borne d'arcade : 9 microbiologistes contre 8 micro-organismes, chacun avec ses coups. Duel à deux en 3 manches gagnantes, ou arène solo et ses 9 vagues à boss. Clavier, manette ou borne.",
     lab_fighter: "17 combattants <span class=\"hi\">· duel &amp; arène</span>",
@@ -595,8 +762,11 @@ const I18N = {
     d_streak: "Trace ton isolement au doigt sur la gélose, puis regarde les colonies pousser en accéléré. L'anse part à 10⁹ UFC et s'épuise à chaque millimètre parcouru ; recroiser une strie en reprend la moitié.",
     d_gram: "Maîtrise la coloration de Gram au doigt. Violet, lugol, alcool, fuchsine... Contrôle l'étape critique de décoloration pour réussir ton frottis !",
     d_wetmount: "Monte ton état frais. Déplace-toi sur la lame, gère la mise au point et le grossissement pour identifier la flore du lait cru, d'un écouvillon ou d'eau stagnante.",
+    d_dungeon: "Plonge dans l'arène au microscope : tire ta toxine, absorbe les acides aminés de tes victimes et vole-leur leurs gènes. La mise au point remplace le saut — tes dégâts suivent la netteté de la cible. 4 souches, 4 matrices, bande son générée.",
+    cd_matrix: "LAIT CRU", cd_wave: "VAGUE 4",
     play_biofilm: "▶ JOUER", play_fighter: "▶ COMBATTRE ↗", play_paint: "▶ SIMULER", play_echelle: "▶ EXPLORER",
     play_streak: "▶ ISOLER", play_gram: "▶ COLORER", play_wetmount: "▶ OBSERVER",
+    play_dungeon: "▶ MUTER ↗",
     plat_desktop: "Conseillé sur ordinateur", plat_mobile: "Conseillé sur smartphone",
     plat_both: "Ordinateur ou smartphone",
     leg_desktop: "ordinateur conseillé", leg_mobile: "smartphone conseillé", leg_both: "les deux",
@@ -609,11 +779,11 @@ const I18N = {
     title_biofilm: "Biofilm Simulator", title_fighter: "Microbe Fighter",
     title_paint: "Microbio Paint", title_echelle: "Scale of the Microbial World",
     title_streak: "Rate My Streak", title_gram: "Perfect Gram",
-    title_wetmount: "Wet Mount",
+    title_wetmount: "Wet Mount", title_dungeon: "Cell Dungeon",
     v_biofilm: "ARCADE · V5.0", v_fighter: "PIXEL FIGHTER · DUEL & ARENA",
     v_paint: "PREDICTIVE SANDBOX · V1.0", v_echelle: "EDUCATIONAL TOOL · V1.0",
     v_streak: "TECHNIQUE DRILL · V1.0", v_gram: "STAINING · V1.0",
-    v_wetmount: "OBSERVATION · V1.0",
+    v_wetmount: "OBSERVATION · V1.0", v_dungeon: "ROGUELITE · PLAYABLE MOCKUP",
     d_biofilm: "Colonise the pipe: multi-species biofilm, matrix, quorum sensing, stress-induced sporulation and survival through CIP cleanings. Keyboard or touch.",
     d_fighter: "Pixel art arcade fighter: 9 microbiologists against 8 micro-organisms, each with their own moves. Two-player duel, first to three rounds, or a solo arena of 9 waves with bosses. Keyboard, gamepad or arcade cabinet.",
     lab_fighter: "17 fighters <span class=\"hi\">· duel &amp; arena</span>",
@@ -622,8 +792,11 @@ const I18N = {
     d_streak: "Draw your streak on the agar with a finger, then watch the colonies grow in fast-forward. The loop starts at 10⁹ CFU and empties with every millimetre travelled; re-crossing a streak takes half of what is there.",
     d_gram: "Master the Gram stain with your finger. Crystal violet, iodine, alcohol, safranin... Don't mess up the critical decolorization step!",
     d_wetmount: "Mount your wet prep. Roam the slide, manage focus and magnification to identify the flora of raw milk, a swab, or stagnant water.",
+    d_dungeon: "Dive into the arena under the microscope: fire your own toxin, absorb the amino acids of your victims and steal their genes. Focus replaces the jump — your damage follows how sharp the target is. 4 strains, 4 matrices, generated soundtrack.",
+    cd_matrix: "RAW MILK", cd_wave: "WAVE 4",
     play_biofilm: "▶ PLAY", play_fighter: "▶ FIGHT ↗", play_paint: "▶ SIMULATE", play_echelle: "▶ EXPLORE",
     play_streak: "▶ ISOLATE", play_gram: "▶ STAIN", play_wetmount: "▶ OBSERVE",
+    play_dungeon: "▶ MUTATE ↗",
     plat_desktop: "Best on desktop", plat_mobile: "Best on a phone",
     plat_both: "Desktop or phone",
     leg_desktop: "desktop recommended", leg_mobile: "phone recommended", leg_both: "either one",
